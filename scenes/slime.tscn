@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://bmid2nr67xfgk"]
+[gd_scene load_steps=4 format=3 uid="uid://bmid2nr67xfgk"]
 
 [ext_resource type="Texture2D" uid="uid://b5godu8ogapwh" path="res://art/slime.png" id="1_qo1yx"]
 
@@ -13,8 +13,15 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bck42"]
+size = Vector2(28, 21)
+
 [node name="Slime" type="Area2D"]
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_tdi0j")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_bck42")
