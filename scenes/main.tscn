@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://3mwkth8mkxp"]
+
+[ext_resource type="Texture2D" uid="uid://cmtf1kbng4ilu" path="res://art/stonefloor.png" id="1_ofcty"]
+[ext_resource type="PackedScene" uid="uid://bmid2nr67xfgk" path="res://scenes/slime.tscn" id="2_g23y4"]
+
+[node name="main" type="Node"]
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("1_ofcty")
+
+[node name="Slime" parent="." instance=ExtResource("2_g23y4")]
