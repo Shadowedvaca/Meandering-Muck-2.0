@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2abxek6act07"
-path="res://.godot/imported/stonefloor.png-86be0be31bb1040bfeb7df7b8dd13e31.ctex"
+uid="uid://bkdrkgk7d6nhr"
+path="res://.godot/imported/stairsup.png-eb70bae746f90d3ca88be6167e516d1d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/stonefloor.png"
-dest_files=["res://.godot/imported/stonefloor.png-86be0be31bb1040bfeb7df7b8dd13e31.ctex"]
+source_file="res://art/stairsup.png"
+dest_files=["res://.godot/imported/stairsup.png-eb70bae746f90d3ca88be6167e516d1d.ctex"]
 
 [params]
 

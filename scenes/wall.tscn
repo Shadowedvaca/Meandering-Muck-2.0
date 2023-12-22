@@ -1,0 +1,46 @@
+[gd_scene load_steps=6 format=3 uid="uid://braxs16tig5mp"]
+
+[ext_resource type="Texture2D" uid="uid://von4xms3clup" path="res://art/wall.png" id="1_eo561"]
+[ext_resource type="Texture2D" uid="uid://booewae6ykc28" path="res://art/wall2.png" id="2_06oxq"]
+[ext_resource type="Texture2D" uid="uid://1lvo7j6d1i8n" path="res://art/wall3.png" id="3_7tedf"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4op04"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_eo561")
+}],
+"loop": true,
+"name": &"blank",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_06oxq")
+}],
+"loop": true,
+"name": &"rat",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_7tedf")
+}],
+"loop": true,
+"name": &"skull",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5iasy"]
+size = Vector2(53, 43)
+
+[node name="wall" type="RigidBody2D"]
+metadata/_edit_group_ = true
+
+[node name="Sprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_4op04")
+animation = &"skull"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0.5, 0.5)
+shape = SubResource("RectangleShape2D_5iasy")
