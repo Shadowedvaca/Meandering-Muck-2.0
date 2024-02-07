@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bkdrkgk7d6nhr"
-path="res://.godot/imported/stairsup.png-eb70bae746f90d3ca88be6167e516d1d.ctex"
+uid="uid://von4xms3clup"
+path="res://.godot/imported/wall.png-680a5431f2e0b8600f18441f5955dff8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/stairsup.png"
-dest_files=["res://.godot/imported/stairsup.png-eb70bae746f90d3ca88be6167e516d1d.ctex"]
+source_file="res://assets/art/wall.png"
+dest_files=["res://.godot/imported/wall.png-680a5431f2e0b8600f18441f5955dff8.ctex"]
 
 [params]
 

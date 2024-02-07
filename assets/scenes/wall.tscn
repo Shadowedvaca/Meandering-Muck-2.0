@@ -1,14 +1,14 @@
 [gd_scene load_steps=6 format=3 uid="uid://braxs16tig5mp"]
 
-[ext_resource type="Texture2D" uid="uid://von4xms3clup" path="res://art/wall.png" id="1_eo561"]
-[ext_resource type="Texture2D" uid="uid://booewae6ykc28" path="res://art/wall2.png" id="2_06oxq"]
-[ext_resource type="Texture2D" uid="uid://1lvo7j6d1i8n" path="res://art/wall3.png" id="3_7tedf"]
+[ext_resource type="Texture2D" uid="uid://von4xms3clup" path="res://assets/art/wall.png" id="1_kml74"]
+[ext_resource type="Texture2D" uid="uid://booewae6ykc28" path="res://assets/art/wall2.png" id="2_o4c7b"]
+[ext_resource type="Texture2D" uid="uid://1lvo7j6d1i8n" path="res://assets/art/wall3.png" id="3_b7hny"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_4op04"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_eo561")
+"texture": ExtResource("1_kml74")
 }],
 "loop": true,
 "name": &"blank",
@@ -16,7 +16,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("2_06oxq")
+"texture": ExtResource("2_o4c7b")
 }],
 "loop": true,
 "name": &"rat",
@@ -24,7 +24,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("3_7tedf")
+"texture": ExtResource("3_b7hny")
 }],
 "loop": true,
 "name": &"skull",
@@ -41,7 +41,7 @@ metadata/_edit_group_ = true
 position = Vector2(0.5, 0)
 scale = Vector2(1.01923, 1)
 sprite_frames = SubResource("SpriteFrames_4op04")
-animation = &"skull"
+animation = &"blank"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0.5, 0.5)

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ck2f0rk3cphpx"
-path="res://.godot/imported/slime.png-c67cb03fab76b821500a16c6bcd5b343.ctex"
+uid="uid://cev1dvtyqe5l"
+path="res://.godot/imported/starsdown.png-8081628a30d04fd0528dfebc97ddaaa7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/slime.png"
-dest_files=["res://.godot/imported/slime.png-c67cb03fab76b821500a16c6bcd5b343.ctex"]
+source_file="res://assets/art/starsdown.png"
+dest_files=["res://.godot/imported/starsdown.png-8081628a30d04fd0528dfebc97ddaaa7.ctex"]
 
 [params]
 
