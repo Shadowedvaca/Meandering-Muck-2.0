@@ -1,29 +1,46 @@
-[gd_scene load_steps=5 format=3 uid="uid://bmid2nr67xfgk"]
+[gd_scene load_steps=8 format=3 uid="uid://bmid2nr67xfgk"]
 
-[ext_resource type="Texture2D" uid="uid://ck2f0rk3cphpx" path="res://assets/art/slime.png" id="1_8rxrh"]
 [ext_resource type="Script" path="res://assets/scenes/slime.gd" id="1_ph7ky"]
+[ext_resource type="Texture2D" uid="uid://bbi6xjnqnl3h8" path="res://assets/art/slime_fly_0.png" id="2_cegdp"]
+[ext_resource type="Texture2D" uid="uid://cjvqqsq8lk2my" path="res://assets/art/slime_fly_1.png" id="3_ood5p"]
+[ext_resource type="Texture2D" uid="uid://dx7rl4rax40pf" path="res://assets/art/slime_walk_0.png" id="4_uq3xa"]
+[ext_resource type="Texture2D" uid="uid://c5l00qdencup0" path="res://assets/art/slime_walk_1.png" id="5_iashm"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tdi0j"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_8rxrh")
+"texture": ExtResource("2_cegdp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ood5p")
 }],
 "loop": true,
-"name": &"default",
+"name": &"fly",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_uq3xa")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_iashm")
+}],
+"loop": true,
+"name": &"walk",
 "speed": 5.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bck42"]
-size = Vector2(28, 21)
+size = Vector2(16, 12)
 
-[node name="Slime" type="Area2D"]
+[node name="Slime" type="CharacterBody2D"]
 script = ExtResource("1_ph7ky")
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_tdi0j")
+animation = &"fly"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -0.5)
 shape = SubResource("RectangleShape2D_bck42")

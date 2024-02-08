@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cev1dvtyqe5l"
-path="res://.godot/imported/starsdown.png-8081628a30d04fd0528dfebc97ddaaa7.ctex"
+uid="uid://c5l00qdencup0"
+path="res://.godot/imported/slime_walk_1.png-75a0ae30d4b81237fd7ed7eb3a15d1b4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/starsdown.png"
-dest_files=["res://.godot/imported/starsdown.png-8081628a30d04fd0528dfebc97ddaaa7.ctex"]
+source_file="res://assets/art/slime_walk_1.png"
+dest_files=["res://.godot/imported/slime_walk_1.png-75a0ae30d4b81237fd7ed7eb3a15d1b4.ctex"]
 
 [params]
 

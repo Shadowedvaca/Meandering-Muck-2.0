@@ -2,7 +2,7 @@ extends Node
 
 var maze = []
 var screen_size = Vector2i(1920, 1080)
-var maze_size = Vector2i(100, 100)
+var maze_size = Vector2i(10, 10)
 var maze_growth = Vector2i(10, 10)
 var rng = RandomNumberGenerator.new()
 var cell_size = Vector2i(16, 16)
@@ -12,24 +12,33 @@ var cell_size = Vector2i(16, 16)
 @onready var slime = $Slime
 
 #MVP Notes
-	# Player needs to be able to move
 	# If the player reaches the end, generate a new maze
 		# Needs a loading screen
 	# Then figure out the screen scaling note below
+		# Player is not properly scaled to the rest of the image
+		# Think I need a single scaling that I use for all maze size and scroll the maze as it gets bigger
+			# Using a camera functionality?
+		# Also how do I share the screen size to both player and main?
 	# Then improve maze code (see notes there)
 	# Then make title screen w/ options menu, start game, quit game options
+		# Plus a loading screen
 	# Make options screen able to configure screen mode and size
 		# Maybe allow user to enter a seed for the rng and select wall and door modes?
 	# I think when all this is done, that is my MVP
 	# Features
 		# Timer per level
 
+func _ready():
+	new_game()
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	pass
 
 # Starting a new game
 	# Move this code to the HUD when that's done
 	# Use a signal to communicate this like in the demo
 func new_game():
-	#get_viewport_rect().size
 	rng.randomize()
 	new_level()
 
@@ -37,13 +46,6 @@ func new_game():
 func new_level():
 	make_maze()
 	
-func _ready():
-	new_game()
-	#pass
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	pass
 
 func make_maze():
 	grow_maze_size()
@@ -254,6 +256,7 @@ func display_maze():
 		#( ( start_pos.x * 1.0 ) * ( cell_size.x * 1.0 ) ) + ( ( cell_size.x * 1.0 ) / 2 ) * ( scale_size.x * 1.0 ),
 		#( ( start_pos.y * 1.0 ) * ( cell_size.y * 1.0 ) ) + ( ( cell_size.y * 1.0 ) / 2 ) * ( scale_size.y * 1.0 )
 	)
+	slime.apply_scale(scale_size * .75)
 	slime.start(start_pos)
 
 

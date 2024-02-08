@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://1lvo7j6d1i8n"
-path="res://.godot/imported/wall3.png-2cd23d12b0e428f98359ed3e4ad5ce24.ctex"
+uid="uid://dx7rl4rax40pf"
+path="res://.godot/imported/slime_walk_0.png-0de1f69b81325eeb2f5897ab21ed64e2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/wall3.png"
-dest_files=["res://.godot/imported/wall3.png-2cd23d12b0e428f98359ed3e4ad5ce24.ctex"]
+source_file="res://assets/art/slime_walk_0.png"
+dest_files=["res://.godot/imported/slime_walk_0.png-0de1f69b81325eeb2f5897ab21ed64e2.ctex"]
 
 [params]
 
