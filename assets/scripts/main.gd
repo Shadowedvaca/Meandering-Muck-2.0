@@ -2,17 +2,16 @@ extends Node
 
 var maze = []
 var screen_size = Vector2i(1920, 1080)
-var maze_size = Vector2i(0, 0)
+var maze_size = Vector2i(100, 100)
 var maze_growth = Vector2i(10, 10)
 var rng = RandomNumberGenerator.new()
 var cell_size = Vector2i(16, 16)
 @onready var wall_tilemap = $WallTileMap
 @onready var floor_tilemap = $FloorTileMap
 @onready var start_end_tilemap = $StartEndTileMap
+@onready var slime = $Slime
 
-# Called when the node enters the scene tree for the first time.
-# Notes from 9/5:
-	# Need to get player to spawn at start
+#MVP Notes
 	# Player needs to be able to move
 	# If the player reaches the end, generate a new maze
 		# Needs a loading screen
@@ -24,38 +23,23 @@ var cell_size = Vector2i(16, 16)
 	# I think when all this is done, that is my MVP
 	# Features
 		# Timer per level
-func _ready():
-	var walls = []
-	var floors = []
+
+
+# Starting a new game
+	# Move this code to the HUD when that's done
+	# Use a signal to communicate this like in the demo
+func new_game():
+	#get_viewport_rect().size
 	rng.randomize()
+	new_level()
+
+# advancing to a new maze
+func new_level():
 	make_maze()
-	# Clear Tilemaps
-	wall_tilemap.clear()
-	floor_tilemap.clear()
-	start_end_tilemap.clear()
-	for x in maze_size.x:
-		for y in maze_size.y:
-			match maze[x][y]:
-				0:
-					floors.append(Vector2i(x,y))
-				1:
-					walls.append(Vector2i(x,y))
-				2:
-					floors.append(Vector2i(x,y))
-					start_end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(0,0))
-					# then use set cells to push a specific tile to this location
-				3:
-					floors.append(Vector2i(x,y))
-					start_end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(1,0))
-	# This seems to work well for mazes of less than 200 height / width
-		# May need to deal w/ this later, I am unsure what takes so long, my maze code or this line...
-	wall_tilemap.set_cells_terrain_connect(0, walls, 0, 0)
-	floor_tilemap.set_cells_terrain_connect(0, floors, 0, 0)
-	# this sucks, need to set the scale of the game to a certain size and the center the dungeon...
-	var scale_size = Vector2((( screen_size.x * 1.0 ) / ( cell_size.x * 1.0 ) / ( maze_size.x  * 1.0 ) ), ( ( screen_size.y * 1.0 ) / ( cell_size.y * 1.0 ) / ( maze_size.y  * 1.0 )))
-	wall_tilemap.apply_scale(scale_size)
-	floor_tilemap.apply_scale(scale_size)
-	start_end_tilemap.apply_scale(scale_size)
+	
+func _ready():
+	new_game()
+	#pass
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -65,6 +49,7 @@ func make_maze():
 	grow_maze_size()
 	set_maze_defaults()
 	generate_maze_section(Vector2i(0, 0), Vector2i(maze_size.x - 1, maze_size.y - 1), 0)
+	display_maze()
 	
 func grow_maze_size():
 	maze_size.x += maze_growth.x
@@ -226,6 +211,51 @@ func make_door(axis: String, wall_point: int, min_d: int, max_d: int, door_type:
 	else:
 		#print("door at: (" + str(door_point) + ", " + str(wall_point) + ")")
 		maze[door_point][wall_point] = door_type
+
+func display_maze():
+	var walls = []
+	var floors = []
+	var start_pos = Vector2(0, 0)
+	# Clear Tilemaps
+	wall_tilemap.clear()
+	floor_tilemap.clear()
+	start_end_tilemap.clear()
+	for x in maze_size.x:
+		for y in maze_size.y:
+			match maze[x][y]:
+				0:
+					floors.append(Vector2i(x,y))
+				1:
+					walls.append(Vector2i(x,y))
+				2:
+					floors.append(Vector2i(x,y))
+					start_end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(0,0))
+					# Set spawn point for player
+					start_pos = Vector2(x,y)
+				3:
+					floors.append(Vector2i(x,y))
+					start_end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(1,0))
+	# This seems to work well for mazes of less than 200 height / width
+		# May need to deal w/ this later, I am unsure what takes so long, my maze code or this line...
+	wall_tilemap.set_cells_terrain_connect(0, walls, 0, 0)
+	floor_tilemap.set_cells_terrain_connect(0, floors, 0, 0)
+	# this sucks, need to set the scale of the game to a certain size and the center the dungeon...
+	var scale_size = Vector2(
+		(( screen_size.x * 1.0 ) / ( cell_size.x * 1.0 ) / ( maze_size.x  * 1.0 ) ),
+		( ( screen_size.y * 1.0 ) / ( cell_size.y * 1.0 ) / ( maze_size.y  * 1.0 ))
+	)
+	wall_tilemap.apply_scale(scale_size)
+	floor_tilemap.apply_scale(scale_size)
+	start_end_tilemap.apply_scale(scale_size)
+	# Spawn Player
+	start_pos = Vector2(
+		( start_pos.x * ( cell_size.x * scale_size.x ) ) + ( ( cell_size.x * scale_size.x ) / 2 ),
+		( start_pos.y * ( cell_size.y * scale_size.y ) ) + ( ( cell_size.y * scale_size.y ) / 2 )
+		#( ( start_pos.x * 1.0 ) * ( cell_size.x * 1.0 ) ) + ( ( cell_size.x * 1.0 ) / 2 ) * ( scale_size.x * 1.0 ),
+		#( ( start_pos.y * 1.0 ) * ( cell_size.y * 1.0 ) ) + ( ( cell_size.y * 1.0 ) / 2 ) * ( scale_size.y * 1.0 )
+	)
+	slime.start(start_pos)
+
 
 # what functions do I need?
 	# _init_

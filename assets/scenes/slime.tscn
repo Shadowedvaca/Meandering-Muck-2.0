@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://bmid2nr67xfgk"]
+[gd_scene load_steps=5 format=3 uid="uid://bmid2nr67xfgk"]
 
 [ext_resource type="Texture2D" uid="uid://ck2f0rk3cphpx" path="res://assets/art/slime.png" id="1_8rxrh"]
+[ext_resource type="Script" path="res://assets/scenes/slime.gd" id="1_ph7ky"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tdi0j"]
 animations = [{
@@ -17,6 +18,7 @@ animations = [{
 size = Vector2(28, 21)
 
 [node name="Slime" type="Area2D"]
+script = ExtResource("1_ph7ky")
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
