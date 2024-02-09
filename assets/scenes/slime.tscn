@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://bmid2nr67xfgk"]
 
-[ext_resource type="Script" path="res://assets/scenes/slime.gd" id="1_ph7ky"]
+[ext_resource type="Script" path="res://assets/scripts/slime.gd" id="1_m4hlr"]
 [ext_resource type="Texture2D" uid="uid://bbi6xjnqnl3h8" path="res://assets/art/slime_fly_0.png" id="2_cegdp"]
 [ext_resource type="Texture2D" uid="uid://cjvqqsq8lk2my" path="res://assets/art/slime_fly_1.png" id="3_ood5p"]
 [ext_resource type="Texture2D" uid="uid://dx7rl4rax40pf" path="res://assets/art/slime_walk_0.png" id="4_uq3xa"]
@@ -35,7 +35,8 @@ animations = [{
 size = Vector2(16, 12)
 
 [node name="Slime" type="CharacterBody2D"]
-script = ExtResource("1_ph7ky")
+collision_mask = 7
+script = ExtResource("1_m4hlr")
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

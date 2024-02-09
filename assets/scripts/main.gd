@@ -6,19 +6,32 @@ var maze_size = Vector2i(10, 10)
 var maze_growth = Vector2i(10, 10)
 var rng = RandomNumberGenerator.new()
 var cell_size = Vector2i(16, 16)
+var level_num: int = 0
 @onready var wall_tilemap = $WallTileMap
 @onready var floor_tilemap = $FloorTileMap
-@onready var start_end_tilemap = $StartEndTileMap
+@onready var start_tilemap = $StartTileMap
+@onready var end_tilemap = $EndTileMap
 @onready var slime = $Slime
+@onready var end_tile_id = $EndTileMap.get_instance_id()
+@onready var start_tile_id = $StartTileMap.get_instance_id()
 
 #MVP Notes
-	# If the player reaches the end, generate a new maze
-		# Needs a loading screen
+	# BUG!  The player starting movement is broken.
+			# Right now, the player spawns and collides and adjusts and leaves the player out of the map or between walls
+			# If Start does not have collision (like before) the player can leave the map through the start cell
+		# Ideas
+			# Maybe the collision shape disabling/enabling section is to blame
+				# Player moves and collides and then it spins them out
+				# If collision was off for the player for all this, then there would be no collisions
+				# Need to turn player input off as well
+				# Yes, do all of this
+					# Also, need to combine Start/End again and have no collision on start
+			# Outer Rect w/ collision (saw on google)
+				# Feels like a last straw kind of thing
+		# Then control speed scale as levels increase
 	# Then figure out the screen scaling note below
-		# Player is not properly scaled to the rest of the image
 		# Think I need a single scaling that I use for all maze size and scroll the maze as it gets bigger
 			# Using a camera functionality?
-		# Also how do I share the screen size to both player and main?
 	# Then improve maze code (see notes there)
 	# Then make title screen w/ options menu, start game, quit game options
 		# Plus a loading screen
@@ -44,6 +57,7 @@ func new_game():
 
 # advancing to a new maze
 func new_level():
+	level_num += 1
 	make_maze()
 	
 
@@ -221,7 +235,8 @@ func display_maze():
 	# Clear Tilemaps
 	wall_tilemap.clear()
 	floor_tilemap.clear()
-	start_end_tilemap.clear()
+	start_tilemap.clear()
+	end_tilemap.clear()
 	for x in maze_size.x:
 		for y in maze_size.y:
 			match maze[x][y]:
@@ -231,12 +246,12 @@ func display_maze():
 					walls.append(Vector2i(x,y))
 				2:
 					floors.append(Vector2i(x,y))
-					start_end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(0,0))
+					start_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(0,0))
 					# Set spawn point for player
 					start_pos = Vector2(x,y)
 				3:
 					floors.append(Vector2i(x,y))
-					start_end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(1,0))
+					end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(1,0))
 	# This seems to work well for mazes of less than 200 height / width
 		# May need to deal w/ this later, I am unsure what takes so long, my maze code or this line...
 	wall_tilemap.set_cells_terrain_connect(0, walls, 0, 0)
@@ -246,9 +261,11 @@ func display_maze():
 		(( screen_size.x * 1.0 ) / ( cell_size.x * 1.0 ) / ( maze_size.x  * 1.0 ) ),
 		( ( screen_size.y * 1.0 ) / ( cell_size.y * 1.0 ) / ( maze_size.y  * 1.0 ))
 	)
-	wall_tilemap.apply_scale(scale_size)
-	floor_tilemap.apply_scale(scale_size)
-	start_end_tilemap.apply_scale(scale_size)
+	wall_tilemap.scale = scale_size
+	floor_tilemap.scale = scale_size
+	start_tilemap.scale = scale_size
+	end_tilemap.scale = scale_size
+	slime.scale = scale_size * .75
 	# Spawn Player
 	start_pos = Vector2(
 		( start_pos.x * ( cell_size.x * scale_size.x ) ) + ( ( cell_size.x * scale_size.x ) / 2 ),
@@ -256,7 +273,6 @@ func display_maze():
 		#( ( start_pos.x * 1.0 ) * ( cell_size.x * 1.0 ) ) + ( ( cell_size.x * 1.0 ) / 2 ) * ( scale_size.x * 1.0 ),
 		#( ( start_pos.y * 1.0 ) * ( cell_size.y * 1.0 ) ) + ( ( cell_size.y * 1.0 ) / 2 ) * ( scale_size.y * 1.0 )
 	)
-	slime.apply_scale(scale_size * .75)
 	slime.start(start_pos)
 
 

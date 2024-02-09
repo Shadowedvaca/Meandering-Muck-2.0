@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://3mwkth8mkxp"]
+[gd_scene load_steps=14 format=3 uid="uid://3mwkth8mkxp"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_shig8"]
 [ext_resource type="PackedScene" uid="uid://bmid2nr67xfgk" path="res://assets/scenes/slime.tscn" id="3_3evq1"]
@@ -838,16 +838,28 @@ terrain_set_0/terrain_0/name = "floor"
 terrain_set_0/terrain_0/color = Color(0.192157, 0.196078, 1, 1)
 sources/0 = SubResource("TileSetAtlasSource_y2jua")
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uw0dr"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qqn3s"]
 texture = ExtResource("4_1a6pl")
 0:0/0 = 0
-0:0/0/z_index = 1
-0:0/0/y_sort_origin = 1
+0:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+0:0/0/physics_layer_0/angular_velocity = 0.0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSet" id="TileSet_f7cta"]
+physics_layer_0/collision_layer = 4
+sources/0 = SubResource("TileSetAtlasSource_qqn3s")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uw0dr"]
+texture = ExtResource("4_1a6pl")
 1:0/0 = 0
 1:0/0/z_index = 1
 1:0/0/y_sort_origin = 1
+1:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+1:0/0/physics_layer_0/angular_velocity = 0.0
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 
 [sub_resource type="TileSet" id="TileSet_b0r2w"]
+physics_layer_0/collision_layer = 2
 sources/0 = SubResource("TileSetAtlasSource_uw0dr")
 
 [node name="main" type="Node"]
@@ -861,7 +873,11 @@ format = 2
 tile_set = SubResource("TileSet_ktcpm")
 format = 2
 
-[node name="StartEndTileMap" type="TileMap" parent="."]
+[node name="StartTileMap" type="TileMap" parent="."]
+tile_set = SubResource("TileSet_f7cta")
+format = 2
+
+[node name="EndTileMap" type="TileMap" parent="."]
 z_index = 1
 tile_set = SubResource("TileSet_b0r2w")
 format = 2
@@ -869,3 +885,5 @@ format = 2
 [node name="Slime" parent="." instance=ExtResource("3_3evq1")]
 z_index = 2
 y_sort_enabled = true
+
+[connection signal="exited" from="Slime" to="." method="new_level"]

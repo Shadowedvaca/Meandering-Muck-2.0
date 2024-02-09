@@ -1,7 +1,11 @@
 extends CharacterBody2D
 
+signal exited
+
+# Due to the player movement using bot move_and_collide (for collision) and position += (for clamping)
+	# This is halved
 @export var speed = 400 # How fast the player will move (pixels/sec).
-var screen_size = Vector2i(1920, 1080)
+@onready var screen_size = get_parent().screen_size
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -25,9 +29,13 @@ func _process(delta):
 		$AnimatedSprite2D.play()
 	else:
 		$AnimatedSprite2D.stop()
-	position += velocity * delta
-	position = position.clamp(Vector2.ZERO, screen_size)
-	move_and_slide()
+	var distance = velocity * delta
+	position += distance
+	var collision_info = move_and_collide(Vector2.ZERO) #distance)
+	position = clamp(position, Vector2.ZERO, Vector2(screen_size))
+	if collision_info:
+		if collision_info.get_collider_id() == get_parent().end_tile_id:
+			exit_reached()
 	if velocity.x != 0:
 		$AnimatedSprite2D.animation = "walk"
 		$AnimatedSprite2D.flip_v = false
@@ -41,4 +49,11 @@ func _process(delta):
 func start(pos):
 	position = pos
 	show()
-	$CollisionShape2D.disabled = false
+	#$CollisionShape2D.disabled = false
+
+
+func exit_reached():
+	hide()
+	exited.emit()
+	#$CollisionShape2D.set_deferred("disabled", true)
+
