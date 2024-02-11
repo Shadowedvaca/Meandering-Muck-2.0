@@ -3,7 +3,7 @@ extends Node
 var maze = []
 var screen_size = Vector2i(1920, 1080)
 var maze_size = Vector2i(10, 10)
-var maze_growth = Vector2i(10, 10)
+var maze_growth = Vector2i(5, 5)
 var rng = RandomNumberGenerator.new()
 var cell_size = Vector2i(16, 16)
 var level_num: int = 0
@@ -12,23 +12,22 @@ var level_num: int = 0
 @onready var start_tilemap = $StartTileMap
 @onready var end_tilemap = $EndTileMap
 @onready var slime = $Slime
+@onready var world_boundary = $StaticBody2D/CollisionShape2D
 @onready var end_tile_id = $EndTileMap.get_instance_id()
 @onready var start_tile_id = $StartTileMap.get_instance_id()
 
 #MVP Notes
-	# BUG!  The player starting movement is broken.
-			# Right now, the player spawns and collides and adjusts and leaves the player out of the map or between walls
-			# If Start does not have collision (like before) the player can leave the map through the start cell
-		# Ideas
-			# Maybe the collision shape disabling/enabling section is to blame
-				# Player moves and collides and then it spins them out
-				# If collision was off for the player for all this, then there would be no collisions
-				# Need to turn player input off as well
-				# Yes, do all of this
-					# Also, need to combine Start/End again and have no collision on start
-			# Outer Rect w/ collision (saw on google)
-				# Feels like a last straw kind of thing
-		# Then control speed scale as levels increase
+	# so now that there is a boundary to keep the player in the maze...
+		# 1 - Figure out how to scale the map once and keep it that size and move the camera around when the maze is too big
+			# The hope is all this wierd shit with the scaling stops and the bug below goes away
+			# Also, in levels above like 6, the static speed makes you clip through the occasional wall...
+		# 2 - I think I need to figure out turning off player input and colission between levels
+			# If you keep pressing after hiting the exit, you can accidently leave the map...
+			# Also, you can sometimes slide out of the start into walls
+			# Also, you can trigger the exit multiple times
+	# New BUG!
+		# Game does not advance after level 3
+			# Thing introduced when this appeared was the speed scaling....
 	# Then figure out the screen scaling note below
 		# Think I need a single scaling that I use for all maze size and scroll the maze as it gets bigger
 			# Using a camera functionality?
@@ -57,6 +56,7 @@ func new_game():
 
 # advancing to a new maze
 func new_level():
+	#print("new level")
 	level_num += 1
 	make_maze()
 	
@@ -129,6 +129,10 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 	# if doing Middle-ish walls, do a 25% of size on either side for wall placement
 	var mid_either_side = .25
 	var mid_adjust = Vector2i(int((max_wall.x - min_wall.x) * mid_either_side), int((max_wall.y - min_wall.y) * mid_either_side))
+	# World Boundary Normal Position
+	var world_boundary_shape = world_boundary.get_shape()
+	var world_boundary_normal = Vector2(0, 0)
+	var world_boundary_pos = Vector2(0, 0)
 	# Test if there can be at least 1 row and 1 column
 	if max_open.x > min_open.x and max_open.y > min_open.y:
 		# If a type of wall is not selected, pick one of the three
@@ -197,15 +201,26 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 					'N':
 						make_door('y', min_wall.y, (wall_point.x + 1), (wall_point.x + 1), door_types[0])
 						make_door('y', min_wall.y, (wall_point.x - 1), (wall_point.x - 1), door_types[1])
+						world_boundary_normal = Vector2.DOWN
+						world_boundary_pos = Vector2(screen_size.x / 2, 0)
 					'E':
 						make_door('x', max_wall.x, (wall_point.y + 1), (wall_point.y + 1), door_types[0])
 						make_door('x', max_wall.x, (wall_point.y - 1), (wall_point.y - 1), door_types[1])
+						world_boundary_normal = Vector2.LEFT
+						world_boundary_pos = Vector2(screen_size.x, screen_size.y / 2)
 					'S':
 						make_door('y', max_wall.y, (wall_point.x + 1), (wall_point.x + 1), door_types[0])
 						make_door('y', max_wall.y, (wall_point.x - 1), (wall_point.x - 1), door_types[1])
+						world_boundary_normal = Vector2.UP
+						world_boundary_pos = Vector2(screen_size.x / 2, screen_size.y)
 					'W':
 						make_door('x', min_wall.x, (wall_point.y + 1), (wall_point.y + 1), door_types[0])
 						make_door('x', min_wall.x, (wall_point.y - 1), (wall_point.y - 1), door_types[1])
+						world_boundary_normal = Vector2.RIGHT
+						world_boundary_pos = Vector2(0, screen_size.y / 2)
+				# Set World Boundary to block open start so player can't leave the maze
+				world_boundary_shape.set_normal(world_boundary_normal)
+				world_boundary.set_position(world_boundary_pos)
 			# Check to see if each chamber needs to be broken into more chambers
 				# Quadrants 1-4 respectively
 			generate_maze_section(min_wall, wall_point, (iteration + 1), 1)

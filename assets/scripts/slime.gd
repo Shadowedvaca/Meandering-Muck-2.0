@@ -4,8 +4,8 @@ signal exited
 
 # Due to the player movement using bot move_and_collide (for collision) and position += (for clamping)
 	# This is halved
-@export var speed = 400 # How fast the player will move (pixels/sec).
-@onready var screen_size = get_parent().screen_size
+@export var speed:int = 500 # How fast the player will move (pixels/sec).
+@onready var screen_size = get_viewport_rect().size
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -23,7 +23,6 @@ func _process(delta):
 		velocity.y += 1
 	if Input.is_action_pressed("move_up"):
 		velocity.y -= 1
-
 	if velocity.length() > 0:
 		velocity = velocity.normalized() * speed
 		$AnimatedSprite2D.play()
@@ -45,11 +44,10 @@ func _process(delta):
 		$AnimatedSprite2D.animation = "fly"
 		$AnimatedSprite2D.flip_v = velocity.y > 0
 
-
 func start(pos):
 	position = pos
+	#$CollisionShape2D.set_deferred("disabled", false)
 	show()
-	#$CollisionShape2D.disabled = false
 
 
 func exit_reached():

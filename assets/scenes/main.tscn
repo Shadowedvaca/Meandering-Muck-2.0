@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://3mwkth8mkxp"]
+[gd_scene load_steps=15 format=3 uid="uid://3mwkth8mkxp"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_shig8"]
 [ext_resource type="PackedScene" uid="uid://bmid2nr67xfgk" path="res://assets/scenes/slime.tscn" id="3_3evq1"]
@@ -841,12 +841,8 @@ sources/0 = SubResource("TileSetAtlasSource_y2jua")
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qqn3s"]
 texture = ExtResource("4_1a6pl")
 0:0/0 = 0
-0:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
-0:0/0/physics_layer_0/angular_velocity = 0.0
-0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 
 [sub_resource type="TileSet" id="TileSet_f7cta"]
-physics_layer_0/collision_layer = 4
 sources/0 = SubResource("TileSetAtlasSource_qqn3s")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uw0dr"]
@@ -861,6 +857,8 @@ texture = ExtResource("4_1a6pl")
 [sub_resource type="TileSet" id="TileSet_b0r2w"]
 physics_layer_0/collision_layer = 2
 sources/0 = SubResource("TileSetAtlasSource_uw0dr")
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_wlmus"]
 
 [node name="main" type="Node"]
 script = ExtResource("1_shig8")
@@ -885,5 +883,10 @@ format = 2
 [node name="Slime" parent="." instance=ExtResource("3_3evq1")]
 z_index = 2
 y_sort_enabled = true
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("WorldBoundaryShape2D_wlmus")
 
 [connection signal="exited" from="Slime" to="." method="new_level"]
