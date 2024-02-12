@@ -5,9 +5,10 @@ var rng = RandomNumberGenerator.new()
 var level_num: int = 0
 var world_boundary_normal = Vector2(0, 0)
 var world_boundary_pos = Vector2(0, 0)
-@export var maze_size = Vector2i(10, 10)
-@export var maze_growth = Vector2i(5, 5)
-@export var cell_size = Vector2i(16, 16)
+@export var maze_size: int = 10
+@onready var maze_size_vector = Vector2i(maze_size, maze_size)
+@export var maze_growth: int = 5
+@onready var maze_growth_vector = Vector2i(maze_growth, maze_growth)
 @onready var wall_tilemap = $WallTileMap
 @onready var floor_tilemap = $FloorTileMap
 @onready var start_tilemap = $StartTileMap
@@ -18,28 +19,9 @@ var world_boundary_pos = Vector2(0, 0)
 @onready var end_tile_id = $EndTileMap.get_instance_id()
 @onready var map_size = wall_tilemap.get_used_rect()
 @onready var tile_size = wall_tilemap.rendering_quadrant_size
+@onready var tile_size_vector = Vector2(tile_size, tile_size)
 @onready var world_size = map_size.size * tile_size
 
-#MVP Notes
-	# The boundary doesn't work
-		# It doesn't work on the second level for sure
-			# Not sure if it works in the first level
-		# Need a plan for stopping the player
-			# Can the world boundary be made to work?
-			# Can the player position clamping be made to work?
-				# A lot of bugs stopped when I pulled this out, I'd rather keep it out
-	# I think I need to figure out turning off player input and colission between levels
-		# If you keep pressing after hiting the exit, you can accidently leave the map...
-		# Also, you can sometimes slide out of the start into walls
-		# Also, you can trigger the exit multiple times
-	# Then improve maze code (see notes there)
-	# Then make title screen w/ options menu, start game, quit game options
-		# Plus a loading screen
-	# Make options screen able to configure screen mode and size
-		# Maybe allow user to enter a seed for the rng and select wall and door modes?
-	# I think when all this is done, that is my MVP
-	# Features
-		# Timer per level
 
 func _ready():
 	new_game()
@@ -64,32 +46,24 @@ func new_level():
 func make_maze():
 	grow_maze_size()
 	set_maze_defaults()
-	generate_maze_section(Vector2i(0, 0), Vector2i(maze_size.x - 1, maze_size.y - 1), 0)
+	generate_maze_section(Vector2i(0, 0), ( maze_size_vector + Vector2i(-1, -1) ), 0)
 	display_maze()
 	
 func grow_maze_size():
-	maze_size.x += maze_growth.x
-	maze_size.y += maze_growth.y
+	maze_size_vector += maze_growth_vector
+
 	
 func set_maze_defaults():
 	maze = []
-	for x in maze_size.x:
+	for x in maze_size_vector.x:
 		maze.append([])
-		for y in maze_size.y:
-			if x == 0 or x == maze_size.x -1 or y == 0 or y == maze_size.y - 1:
+		for y in maze_size_vector.y:
+			if x == 0 or x == maze_size_vector.x -1 or y == 0 or y == maze_size_vector.y - 1:
 				maze[x].append(1);
 			else:
 				maze[x].append(0);
 
-# make a function that creates the start and end
-	# all styles of it and then I can choose which I use
-# make a function that creates 3 doors
-	# both the hard coded and the random ones
-# make a function that creates walls
-# Note from 2/5 - need to get the different door options to work (middle doesn't work well w/ a random door)
-	# Also, This generate maze section can prolly be cut into pieces
 func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration: int, quadrant: int = 0):
-	#print("Iteration = " + str(iteration) + " Quadrant = " + str(quadrant))
 	var skip = 0
 	var wall_point = Vector2i(0, 0)
 	var one_cell = Vector2i(1, 1)
@@ -225,8 +199,8 @@ func display_maze():
 	floor_tilemap.clear()
 	start_tilemap.clear()
 	end_tilemap.clear()
-	for x in maze_size.x:
-		for y in maze_size.y:
+	for x in maze_size_vector.x:
+		for y in maze_size_vector.y:
 			match maze[x][y]:
 				0:
 					floors.append(Vector2i(x,y))
@@ -254,8 +228,5 @@ func display_maze():
 	# Set up camera
 	$Slime/FollowCam.set_up_camera()
 	# Spawn Player
-	start_pos = Vector2(
-		( start_pos.x * cell_size.x ) + ( cell_size.x / 2 ),
-		( start_pos.y * cell_size.y ) + ( cell_size.y / 2 )
-	)
+	start_pos = ( start_pos * tile_size_vector ) + ( tile_size_vector * Vector2(0.5, 0.5) )
 	slime.start(start_pos)
