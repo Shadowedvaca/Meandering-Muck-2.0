@@ -21,6 +21,7 @@ var world_boundary_pos = Vector2(0, 0)
 @onready var tile_size = wall_tilemap.rendering_quadrant_size
 @onready var tile_size_vector = Vector2(tile_size, tile_size)
 @onready var world_size = map_size.size * tile_size
+@onready var world_boundary_shape = world_boundary.get_shape()
 
 
 func _ready():
@@ -192,8 +193,6 @@ func display_maze():
 	var walls = []
 	var floors = []
 	var start_pos = Vector2(0, 0)
-	# World Boundary Setup
-	var world_boundary_shape = world_boundary.get_shape()
 	# Clear Tilemaps
 	wall_tilemap.clear()
 	floor_tilemap.clear()
@@ -224,7 +223,6 @@ func display_maze():
 	# Set World Boundary to block open start so player can't leave the maze
 	world_boundary_shape.set_normal(world_boundary_normal)
 	world_boundary_body.set_position(world_boundary_pos * Vector2(world_size) )
-	world_boundary.set_position(world_boundary_pos * Vector2(world_size) )
 	# Set up camera
 	$Slime/FollowCam.set_up_camera()
 	# Spawn Player
