@@ -1,36 +1,37 @@
 extends Node
 
 var maze = []
-var screen_size = Vector2i(1920, 1080)
-var maze_size = Vector2i(10, 10)
-var maze_growth = Vector2i(5, 5)
 var rng = RandomNumberGenerator.new()
-var cell_size = Vector2i(16, 16)
 var level_num: int = 0
+var world_boundary_normal = Vector2(0, 0)
+var world_boundary_pos = Vector2(0, 0)
+@export var maze_size = Vector2i(10, 10)
+@export var maze_growth = Vector2i(5, 5)
+@export var cell_size = Vector2i(16, 16)
 @onready var wall_tilemap = $WallTileMap
 @onready var floor_tilemap = $FloorTileMap
 @onready var start_tilemap = $StartTileMap
 @onready var end_tilemap = $EndTileMap
 @onready var slime = $Slime
-@onready var world_boundary = $StaticBody2D/CollisionShape2D
+@onready var world_boundary_body = $StaticBody2D
+@onready var world_boundary = $StaticBody2D/WorldBoundary
 @onready var end_tile_id = $EndTileMap.get_instance_id()
-@onready var start_tile_id = $StartTileMap.get_instance_id()
+@onready var map_size = wall_tilemap.get_used_rect()
+@onready var tile_size = wall_tilemap.rendering_quadrant_size
+@onready var world_size = map_size.size * tile_size
 
 #MVP Notes
-	# so now that there is a boundary to keep the player in the maze...
-		# 1 - Figure out how to scale the map once and keep it that size and move the camera around when the maze is too big
-			# The hope is all this wierd shit with the scaling stops and the bug below goes away
-			# Also, in levels above like 6, the static speed makes you clip through the occasional wall...
-		# 2 - I think I need to figure out turning off player input and colission between levels
-			# If you keep pressing after hiting the exit, you can accidently leave the map...
-			# Also, you can sometimes slide out of the start into walls
-			# Also, you can trigger the exit multiple times
-	# New BUG!
-		# Game does not advance after level 3
-			# Thing introduced when this appeared was the speed scaling....
-	# Then figure out the screen scaling note below
-		# Think I need a single scaling that I use for all maze size and scroll the maze as it gets bigger
-			# Using a camera functionality?
+	# The boundary doesn't work
+		# It doesn't work on the second level for sure
+			# Not sure if it works in the first level
+		# Need a plan for stopping the player
+			# Can the world boundary be made to work?
+			# Can the player position clamping be made to work?
+				# A lot of bugs stopped when I pulled this out, I'd rather keep it out
+	# I think I need to figure out turning off player input and colission between levels
+		# If you keep pressing after hiting the exit, you can accidently leave the map...
+		# Also, you can sometimes slide out of the start into walls
+		# Also, you can trigger the exit multiple times
 	# Then improve maze code (see notes there)
 	# Then make title screen w/ options menu, start game, quit game options
 		# Plus a loading screen
@@ -56,7 +57,6 @@ func new_game():
 
 # advancing to a new maze
 func new_level():
-	#print("new level")
 	level_num += 1
 	make_maze()
 	
@@ -86,10 +86,6 @@ func set_maze_defaults():
 # make a function that creates 3 doors
 	# both the hard coded and the random ones
 # make a function that creates walls
-# work this in
-	#start_vector = maze_array.find(2)
-	#end_vector = maze_array.find(3)
-# Note from 2/1 - after I get this working, simplify the positioning variable w/ a new object
 # Note from 2/5 - need to get the different door options to work (middle doesn't work well w/ a random door)
 	# Also, This generate maze section can prolly be cut into pieces
 func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration: int, quadrant: int = 0):
@@ -129,10 +125,6 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 	# if doing Middle-ish walls, do a 25% of size on either side for wall placement
 	var mid_either_side = .25
 	var mid_adjust = Vector2i(int((max_wall.x - min_wall.x) * mid_either_side), int((max_wall.y - min_wall.y) * mid_either_side))
-	# World Boundary Normal Position
-	var world_boundary_shape = world_boundary.get_shape()
-	var world_boundary_normal = Vector2(0, 0)
-	var world_boundary_pos = Vector2(0, 0)
 	# Test if there can be at least 1 row and 1 column
 	if max_open.x > min_open.x and max_open.y > min_open.y:
 		# If a type of wall is not selected, pick one of the three
@@ -158,33 +150,23 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 		for y in range(wall_min.y, (wall_max.y + 1)):
 			if maze[min_wall.x][y] != 1 or maze[max_wall.x][y] != 1:
 				invalid_cols.append(y)
-		#print("invalid rows = " + str(invalid_rows))
-		#print("invalid cols = " + str(invalid_cols))
 		# check for corridors that are too small for a wall due to the 1 space on either side limit and door positioning
 		if not((wall_max.x - wall_min.x) + 1) <= len(invalid_rows) and not((wall_max.y - wall_min.y) + 1) <= len(invalid_cols):
 			# Pick random numbers until a good one is found
-			#print("wall point x")
 			while wall_point.x == 0 or wall_point.x in invalid_rows:
 				wall_point.x = rng.randi_range(wall_min.x, wall_max.x)
-				#print(wall_point.x)
-			#print("wall point y")
 			while wall_point.y == 0 or wall_point.y in invalid_cols:
 				wall_point.y = rng.randi_range(wall_min.y, wall_max.y)
-				#print(wall_point.y)
 			# set bits to 1 for the walls
 			for x in wall_fill_x:
 				maze[x][wall_point.y] = 1
 			for y in wall_fill_y:
 				maze[wall_point.x][y] = 1
 			var passes = 1
-			#print('iteration = ' + str(iteration))
 			while len(compass) > 1:
 				direction_id = rng.randi_range(0, len(compass) - 1)
 				direction = compass.pop_at(direction_id)
-				#print('pass = ' + str(passes))
-				#print(compass)
 				passes += 1
-				#print("Direction = " + direction)
 				match direction:
 					'N':
 						make_door('x', wall_point.x, min_corr.y, (wall_point.y - 1), 0)
@@ -202,25 +184,22 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 						make_door('y', min_wall.y, (wall_point.x + 1), (wall_point.x + 1), door_types[0])
 						make_door('y', min_wall.y, (wall_point.x - 1), (wall_point.x - 1), door_types[1])
 						world_boundary_normal = Vector2.DOWN
-						world_boundary_pos = Vector2(screen_size.x / 2, 0)
+						world_boundary_pos = Vector2(0.0, 0.0)
 					'E':
 						make_door('x', max_wall.x, (wall_point.y + 1), (wall_point.y + 1), door_types[0])
 						make_door('x', max_wall.x, (wall_point.y - 1), (wall_point.y - 1), door_types[1])
 						world_boundary_normal = Vector2.LEFT
-						world_boundary_pos = Vector2(screen_size.x, screen_size.y / 2)
+						world_boundary_pos = Vector2(1.0, 0.0)
 					'S':
 						make_door('y', max_wall.y, (wall_point.x + 1), (wall_point.x + 1), door_types[0])
 						make_door('y', max_wall.y, (wall_point.x - 1), (wall_point.x - 1), door_types[1])
 						world_boundary_normal = Vector2.UP
-						world_boundary_pos = Vector2(screen_size.x / 2, screen_size.y)
+						world_boundary_pos = Vector2(1.0, 1.0)
 					'W':
 						make_door('x', min_wall.x, (wall_point.y + 1), (wall_point.y + 1), door_types[0])
 						make_door('x', min_wall.x, (wall_point.y - 1), (wall_point.y - 1), door_types[1])
 						world_boundary_normal = Vector2.RIGHT
-						world_boundary_pos = Vector2(0, screen_size.y / 2)
-				# Set World Boundary to block open start so player can't leave the maze
-				world_boundary_shape.set_normal(world_boundary_normal)
-				world_boundary.set_position(world_boundary_pos)
+						world_boundary_pos = Vector2(0.0, 1.0)
 			# Check to see if each chamber needs to be broken into more chambers
 				# Quadrants 1-4 respectively
 			generate_maze_section(min_wall, wall_point, (iteration + 1), 1)
@@ -228,25 +207,19 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 			generate_maze_section(Vector2i(min_wall.x, wall_point.y), Vector2i(wall_point.x, max_wall.y), (iteration + 1), 3)
 			generate_maze_section(wall_point, max_wall, (iteration + 1), 4)
 
-func make_start_end():
-	pass
-
-func make_multi_door():
-	pass
-
 func make_door(axis: String, wall_point: int, min_d: int, max_d: int, door_type: int):
 	var door_point: int = rng.randi_range(min_d, max_d)
 	if axis == 'x':
-		#print("door at: (" + str(wall_point) + ", " + str(door_point) + ")")
 		maze[wall_point][door_point] = door_type
 	else:
-		#print("door at: (" + str(door_point) + ", " + str(wall_point) + ")")
 		maze[door_point][wall_point] = door_type
 
 func display_maze():
 	var walls = []
 	var floors = []
 	var start_pos = Vector2(0, 0)
+	# World Boundary Setup
+	var world_boundary_shape = world_boundary.get_shape()
 	# Clear Tilemaps
 	wall_tilemap.clear()
 	floor_tilemap.clear()
@@ -271,39 +244,18 @@ func display_maze():
 		# May need to deal w/ this later, I am unsure what takes so long, my maze code or this line...
 	wall_tilemap.set_cells_terrain_connect(0, walls, 0, 0)
 	floor_tilemap.set_cells_terrain_connect(0, floors, 0, 0)
-	# this sucks, need to set the scale of the game to a certain size and the center the dungeon...
-	var scale_size = Vector2(
-		(( screen_size.x * 1.0 ) / ( cell_size.x * 1.0 ) / ( maze_size.x  * 1.0 ) ),
-		( ( screen_size.y * 1.0 ) / ( cell_size.y * 1.0 ) / ( maze_size.y  * 1.0 ))
-	)
-	wall_tilemap.scale = scale_size
-	floor_tilemap.scale = scale_size
-	start_tilemap.scale = scale_size
-	end_tilemap.scale = scale_size
-	slime.scale = scale_size * .75
+	# Reset sizing variables
+	map_size = wall_tilemap.get_used_rect()
+	world_size = map_size.size * tile_size
+	# Set World Boundary to block open start so player can't leave the maze
+	world_boundary_shape.set_normal(world_boundary_normal)
+	world_boundary_body.set_position(world_boundary_pos * Vector2(world_size) )
+	world_boundary.set_position(world_boundary_pos * Vector2(world_size) )
+	# Set up camera
+	$Slime/FollowCam.set_up_camera()
 	# Spawn Player
 	start_pos = Vector2(
-		( start_pos.x * ( cell_size.x * scale_size.x ) ) + ( ( cell_size.x * scale_size.x ) / 2 ),
-		( start_pos.y * ( cell_size.y * scale_size.y ) ) + ( ( cell_size.y * scale_size.y ) / 2 )
-		#( ( start_pos.x * 1.0 ) * ( cell_size.x * 1.0 ) ) + ( ( cell_size.x * 1.0 ) / 2 ) * ( scale_size.x * 1.0 ),
-		#( ( start_pos.y * 1.0 ) * ( cell_size.y * 1.0 ) ) + ( ( cell_size.y * 1.0 ) / 2 ) * ( scale_size.y * 1.0 )
+		( start_pos.x * cell_size.x ) + ( cell_size.x / 2 ),
+		( start_pos.y * cell_size.y ) + ( cell_size.y / 2 )
 	)
 	slime.start(start_pos)
-
-
-# what functions do I need?
-	# _init_
-		# Initial values
-		# Calls new_maze
-	# new maze
-		# Grows maze
-		# calls generate maze section
-	# generate maze section
-		# code to add walls and doors, then run in each quadrant
-	# get maze
-		# just returns the maze itself
-	# get start (returns vector)
-		# searches array for 2
-	# get end (returns vector)
-		# searches array for 3
-	

@@ -2,10 +2,7 @@ extends CharacterBody2D
 
 signal exited
 
-# Due to the player movement using bot move_and_collide (for collision) and position += (for clamping)
-	# This is halved
-@export var speed:int = 500 # How fast the player will move (pixels/sec).
-@onready var screen_size = get_viewport_rect().size
+@export var speed:int = 75 # How fast the player will move (pixels/sec).
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -29,9 +26,7 @@ func _process(delta):
 	else:
 		$AnimatedSprite2D.stop()
 	var distance = velocity * delta
-	position += distance
-	var collision_info = move_and_collide(Vector2.ZERO) #distance)
-	position = clamp(position, Vector2.ZERO, Vector2(screen_size))
+	var collision_info = move_and_collide(distance)
 	if collision_info:
 		if collision_info.get_collider_id() == get_parent().end_tile_id:
 			exit_reached()
@@ -46,12 +41,10 @@ func _process(delta):
 
 func start(pos):
 	position = pos
-	#$CollisionShape2D.set_deferred("disabled", false)
 	show()
 
 
 func exit_reached():
 	hide()
 	exited.emit()
-	#$CollisionShape2D.set_deferred("disabled", true)
 

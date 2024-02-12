@@ -1,10 +1,13 @@
-[gd_scene load_steps=15 format=3 uid="uid://3mwkth8mkxp"]
+[gd_scene load_steps=16 format=3 uid="uid://3mwkth8mkxp"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_shig8"]
 [ext_resource type="PackedScene" uid="uid://bmid2nr67xfgk" path="res://assets/scenes/slime.tscn" id="3_3evq1"]
 [ext_resource type="Texture2D" uid="uid://cvs4hr3e4fmfu" path="res://assets/art/floor_tileset.png" id="3_8k54p"]
 [ext_resource type="Texture2D" uid="uid://dihohjvnyf76x" path="res://assets/art/wall_tileset.png" id="3_apbmu"]
 [ext_resource type="Texture2D" uid="uid://d2uq3ma351kbt" path="res://assets/art/start_end_tileset.png" id="4_1a6pl"]
+[ext_resource type="Script" path="res://assets/scripts/FollowCam.gd" id="6_y1sb1"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_wlmus"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0d88o"]
 texture = ExtResource("3_apbmu")
@@ -858,10 +861,16 @@ texture = ExtResource("4_1a6pl")
 physics_layer_0/collision_layer = 2
 sources/0 = SubResource("TileSetAtlasSource_uw0dr")
 
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_wlmus"]
-
 [node name="main" type="Node"]
 script = ExtResource("1_shig8")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+light_mask = 0
+
+[node name="WorldBoundary" type="CollisionShape2D" parent="StaticBody2D"]
+top_level = true
+shape = SubResource("WorldBoundaryShape2D_wlmus")
+debug_color = Color(0.917647, 0, 0.705882, 0.419608)
 
 [node name="WallTileMap" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_ur6ea")
@@ -883,10 +892,19 @@ format = 2
 [node name="Slime" parent="." instance=ExtResource("3_3evq1")]
 z_index = 2
 y_sort_enabled = true
+scale = Vector2(0.7, 0.7)
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-shape = SubResource("WorldBoundaryShape2D_wlmus")
+[node name="FollowCam" type="Camera2D" parent="Slime" node_paths=PackedStringArray("tilemap")]
+process_callback = 0
+limit_left = 0
+limit_top = 0
+limit_smoothed = true
+position_smoothing_enabled = true
+script = ExtResource("6_y1sb1")
+tilemap = NodePath("../../WallTileMap")
+camera_speed = 0.01
+default_zoom = 2.0
+min_zoom = 0.5
+max_zoom = 8.0
 
 [connection signal="exited" from="Slime" to="." method="new_level"]
