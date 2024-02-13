@@ -865,10 +865,11 @@ sources/0 = SubResource("TileSetAtlasSource_uw0dr")
 script = ExtResource("1_shig8")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
+visible = false
 light_mask = 0
 
 [node name="WorldBoundary" type="CollisionShape2D" parent="StaticBody2D"]
-top_level = true
+visible = false
 shape = SubResource("WorldBoundaryShape2D_wlmus")
 debug_color = Color(0.917647, 0, 0.705882, 0.419608)
 

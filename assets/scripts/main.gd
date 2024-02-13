@@ -3,8 +3,20 @@ extends Node
 var maze = []
 var rng = RandomNumberGenerator.new()
 var level_num: int = 0
-var world_boundary_normal = Vector2(0, 0)
-var world_boundary_pos = Vector2(0, 0)
+var world_boundary_normal = Vector2.ZERO
+var world_boundary_pos = Vector2.ZERO
+# Types of selections
+@export var maze_types = ['Random', 'Middle-ish', 'Middle']
+@export var maze_type: String = 'Random'
+@export var start_end_types = ['start', 'end']
+@export var tile_types = {
+	"floor": 0,
+	"wall": 1,
+	"start": 2,
+	"end": 3
+}
+# if doing Middle-ish walls, do a 25% of size on either side for wall placement
+@export var middle_ish_range: float = .25
 @export var maze_size: int = 10
 @onready var maze_size_vector = Vector2i(maze_size, maze_size)
 @export var maze_growth: int = 5
@@ -47,7 +59,8 @@ func new_level():
 func make_maze():
 	grow_maze_size()
 	set_maze_defaults()
-	generate_maze_section(Vector2i(0, 0), ( maze_size_vector + Vector2i(-1, -1) ), 0)
+	set_maze_format()
+	generate_maze_section(Vector2i.ZERO, ( maze_size_vector + Vector2i(-1, -1) ), 0)
 	display_maze()
 	
 func grow_maze_size():
@@ -64,79 +77,106 @@ func set_maze_defaults():
 			else:
 				maze[x].append(0);
 
+func set_maze_format():
+	# If a type of wall is not selected, pick one of the three
+		# shuffle the types and pick the first
+	if maze_type == '':
+		maze_types.shuffle()
+		maze_type = maze_types[0]
+
 func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration: int, quadrant: int = 0):
 	var skip = 0
-	var wall_point = Vector2i(0, 0)
-	var one_cell = Vector2i(1, 1)
-	# These are the walls around the section
-	var min_wall: Vector2i = min_points
-	var max_wall: Vector2i = max_points
-	# These are the mandatory corridors by those walls
-	var min_corr: Vector2i = min_wall + one_cell
-	var max_corr: Vector2i = max_wall - one_cell
-	# This draws out the open space in the maze
-	var min_open: Vector2i = min_corr + one_cell
-	var max_open: Vector2i = max_corr - one_cell
-	# only draw on the corridors and open space
-		# Range is not inclusive of the last number, so go to wall
-	var wall_fill_x = range(min_corr.x, max_wall.x)
-	var wall_fill_y = range(min_corr.y, max_wall.y)
+	var wall_point = Vector2i.ZERO
 	# used to pick where doors go
 	var compass = ['N', 'E', 'S', 'W']
 	var direction_id = 0
 	var direction = ''
-	var door_types = [2, 3]
-	# The cooridors are automatically invalid
-	var invalid_cols = []
-	var invalid_rows = []
-	# Types of selections
-	var wall_types = ['Random', 'Middle-ish', 'Middle']
-	var wall_type = 'Random'
-	# Marks the start and end of the random wall placement
-	var wall_min = Vector2i(0, 0)
-	var wall_max = Vector2i(0, 0)
-	# Marks the mid point
-	var mid_open = Vector2i(min_open.x + int((max_open.x - min_open.x) * .5), min_open.y + int((max_open.y - min_open.y) * .5))
-	# if doing Middle-ish walls, do a 25% of size on either side for wall placement
-	var mid_either_side = .25
-	var mid_adjust = Vector2i(int((max_wall.x - min_wall.x) * mid_either_side), int((max_wall.y - min_wall.y) * mid_either_side))
+	# Set up the quadrant object to have all the pertinent points of data
+	var section_cfg = {
+		"iteration": iteration
+		,"quadrant": quadrant
+		,"outer_wall": { # These are the outer walls (what is passed to generate)
+			"min": min_points
+			,"max": max_points
+		}
+	}
+	section_cfg["corridor"] = { # This is the mandatory corridor outside the outer wall
+		"min": section_cfg.outer_wall.min + Vector2i.ONE
+		,"max": section_cfg.outer_wall.max - Vector2i.ONE
+	}
+	section_cfg["open"] = { # This is the area inside the quadrant that is potentially open for wall placement
+		"min": section_cfg.corridor.min + Vector2i.ONE
+		,"max": section_cfg.corridor.max - Vector2i.ONE
+	}
+	# only draw on the corridors and open space
+		# Range is not inclusive of the last number, so go to wall
+	section_cfg["inner_wall_fill"] = {
+		"x" = range(section_cfg.corridor.min.x, section_cfg.outer_wall.max.x)
+		,"y" = range(section_cfg.corridor.min.y, section_cfg.outer_wall.max.y)
+	}
+	section_cfg["inner_wall_potential"] = { # This where the wall could be placed based on the maze_type
+		# These are the possible ranges
+		"min": Vector2i.ZERO
+		,"max": Vector2i.ZERO
+		# These are the possible locations between those ranges
+		,"x": []
+		,"y": []
+	}
+	section_cfg.middle_point = Vector2i( # This is used for Middle and is the center
+		section_cfg.open.min.x + int((section_cfg.open.max.x - section_cfg.open.min.x) * .5)
+		,section_cfg.open.min.y + int((section_cfg.open.max.y - section_cfg.open.min.y) * .5)
+	)
+	section_cfg.middle_ish_adjustment = Vector2i(
+		int((section_cfg.outer_wall.max.x - section_cfg.outer_wall.min.x) * middle_ish_range)
+		,int((section_cfg.outer_wall.max.y - section_cfg.outer_wall.min.y) * middle_ish_range)
+	)
+	section_cfg.inner_wall = Vector2i.ZERO # This is the chosen inner wall intersection
 	# Test if there can be at least 1 row and 1 column
-	if max_open.x > min_open.x and max_open.y > min_open.y:
-		# If a type of wall is not selected, pick one of the three
-			# shuffle the types and pick the first
-		if wall_type == '':
-			wall_types.shuffle()
-			wall_type = wall_type[0]
-		match wall_type:
+	if section_cfg.open.max.x > section_cfg.open.min.x and section_cfg.open.max.y > section_cfg.open.min.y:
+		
+		# WALL CODE
+		
+		match maze_type:
 			'Random':
-				wall_min = Vector2i(min_open.x, min_open.y)
-				wall_max = Vector2i(max_open.x, max_open.y)
+				section_cfg.inner_wall_potential.min = Vector2i(section_cfg.open.min.x
+																, section_cfg.open.min.y)
+				section_cfg.inner_wall_potential.max = Vector2i(section_cfg.open.max.x
+																, section_cfg.open.max.y)
 			'Middle':
-				wall_min = Vector2i(mid_open.x, mid_open.y)
-				wall_max = wall_min
+				section_cfg.inner_wall_potential.min = Vector2i(section_cfg.middle_point.x
+																, section_cfg.middle_point.y)
+				section_cfg.inner_wall_potential.max = section_cfg.inner_wall.min
 			'Middle-ish':
-				wall_min = Vector2i(mid_open.x - mid_adjust.x, mid_open.y - mid_adjust.y)
-				wall_max = Vector2i(mid_open.x + mid_adjust.x, mid_open.y + mid_adjust.y)
+				section_cfg.inner_wall_potential.min = Vector2i(section_cfg.middle_point.x - section_cfg.middle_ish_adjustment.x
+																, section_cfg.middle_point.y - section_cfg.middle_ish_adjustment.y)
+				section_cfg.inner_wall_potential.max = Vector2i(section_cfg.middle_point.x + section_cfg.middle_ish_adjustment.x
+																, section_cfg.middle_point.y + section_cfg.middle_ish_adjustment.y)
 		# Test to see if there is room for walls
 		#	Assumption is that every wall must have 1 coridoor next to it
-		for x in range(wall_min.x, (wall_max.x + 1)):
-			if maze[x][min_wall.y] != 1 or maze[x][max_wall.y] != 1:
-				invalid_rows.append(x)
-		for y in range(wall_min.y, (wall_max.y + 1)):
-			if maze[min_wall.x][y] != 1 or maze[max_wall.x][y] != 1:
-				invalid_cols.append(y)
+		#	+ 1 on end because range does not include the last number
+		for x in range(section_cfg.inner_wall_potential.min.x, (section_cfg.inner_wall_potential.max.x + 1)):
+			if maze[x][section_cfg.outer_wall.min.y] == 1 and maze[x][section_cfg.outer_wall.max.y] == 1:
+				section_cfg.inner_wall_potential.x.append(x)
+		for y in range(section_cfg.inner_wall_potential.min.y, (section_cfg.inner_wall_potential.max.y + 1)):
+			if maze[section_cfg.outer_wall.min.x][y] == 1 and maze[section_cfg.outer_wall.max.x][y] == 1:
+				section_cfg.inner_wall_potential.y.append(y)
 		# check for corridors that are too small for a wall due to the 1 space on either side limit and door positioning
-		if not((wall_max.x - wall_min.x) + 1) <= len(invalid_rows) and not((wall_max.y - wall_min.y) + 1) <= len(invalid_cols):
-			# Pick random numbers until a good one is found
-			while wall_point.x == 0 or wall_point.x in invalid_rows:
-				wall_point.x = rng.randi_range(wall_min.x, wall_max.x)
-			while wall_point.y == 0 or wall_point.y in invalid_cols:
-				wall_point.y = rng.randi_range(wall_min.y, wall_max.y)
+		if not(section_cfg.inner_wall_potential.x.is_empty()) and not(section_cfg.inner_wall_potential.y.is_empty()):
+			
+			# WALL CODE
+			
+			section_cfg.inner_wall_potential.x.shuffle()
+			section_cfg.inner_wall.x = section_cfg.inner_wall_potential.x[0]
+			section_cfg.inner_wall_potential.y.shuffle()
+			section_cfg.inner_wall.y = section_cfg.inner_wall_potential.y[0]
 			# set bits to 1 for the walls
-			for x in wall_fill_x:
-				maze[x][wall_point.y] = 1
-			for y in wall_fill_y:
-				maze[wall_point.x][y] = 1
+			for x in section_cfg.inner_wall_fill.x:
+				maze[x][section_cfg.inner_wall.y] = 1
+			for y in section_cfg.inner_wall_fill.y:
+				maze[section_cfg.inner_wall.x][y] = 1
+			
+			# DOOR CODE
+			
 			var passes = 1
 			while len(compass) > 1:
 				direction_id = rng.randi_range(0, len(compass) - 1)
@@ -144,43 +184,44 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 				passes += 1
 				match direction:
 					'N':
-						make_door('x', wall_point.x, min_corr.y, (wall_point.y - 1), 0)
+						make_door('x', section_cfg.inner_wall.x, section_cfg.corridor.min.y, (section_cfg.inner_wall.y - 1), 0)
 					'E':
-						make_door('y', wall_point.y, (wall_point.x + 1), max_corr.x, 0)
+						make_door('y', section_cfg.inner_wall.y, (section_cfg.inner_wall.x + 1), section_cfg.corridor.max.x, 0)
 					'S':
-						make_door('x', wall_point.x, (wall_point.y + 1), max_corr.y, 0)
+						make_door('x', section_cfg.inner_wall.x, (section_cfg.inner_wall.y + 1), section_cfg.corridor.max.y, 0)
 					'W':
-						make_door('y', wall_point.y, min_corr.x, (wall_point.x - 1), 0)
+						make_door('y', section_cfg.inner_wall.y, section_cfg.corridor.min.x, (section_cfg.inner_wall.x - 1), 0)
 			# Determine where the start and end are
 			if iteration == 0:
-				door_types.shuffle()
+				start_end_types.shuffle()
 				match compass[0]:
 					'N':
-						make_door('y', min_wall.y, (wall_point.x + 1), (wall_point.x + 1), door_types[0])
-						make_door('y', min_wall.y, (wall_point.x - 1), (wall_point.x - 1), door_types[1])
+						make_door('y', section_cfg.outer_wall.min.y, (section_cfg.inner_wall.x + 1), (section_cfg.inner_wall.x + 1), tile_types[start_end_types[0]])
+						make_door('y', section_cfg.outer_wall.min.y, (section_cfg.inner_wall.x - 1), (section_cfg.inner_wall.x - 1), tile_types[start_end_types[1]])
 						world_boundary_normal = Vector2.DOWN
 						world_boundary_pos = Vector2(0.0, 0.0)
 					'E':
-						make_door('x', max_wall.x, (wall_point.y + 1), (wall_point.y + 1), door_types[0])
-						make_door('x', max_wall.x, (wall_point.y - 1), (wall_point.y - 1), door_types[1])
+						make_door('x', section_cfg.outer_wall.max.x, (section_cfg.inner_wall.y + 1), (section_cfg.inner_wall.y + 1), tile_types[start_end_types[0]])
+						make_door('x', section_cfg.outer_wall.max.x, (section_cfg.inner_wall.y - 1), (section_cfg.inner_wall.y - 1), tile_types[start_end_types[1]])
 						world_boundary_normal = Vector2.LEFT
 						world_boundary_pos = Vector2(1.0, 0.0)
 					'S':
-						make_door('y', max_wall.y, (wall_point.x + 1), (wall_point.x + 1), door_types[0])
-						make_door('y', max_wall.y, (wall_point.x - 1), (wall_point.x - 1), door_types[1])
+						make_door('y', section_cfg.outer_wall.max.y, (section_cfg.inner_wall.x + 1), (section_cfg.inner_wall.x + 1), tile_types[start_end_types[0]])
+						make_door('y', section_cfg.outer_wall.max.y, (section_cfg.inner_wall.x - 1), (section_cfg.inner_wall.x - 1), tile_types[start_end_types[1]])
 						world_boundary_normal = Vector2.UP
 						world_boundary_pos = Vector2(1.0, 1.0)
 					'W':
-						make_door('x', min_wall.x, (wall_point.y + 1), (wall_point.y + 1), door_types[0])
-						make_door('x', min_wall.x, (wall_point.y - 1), (wall_point.y - 1), door_types[1])
+						make_door('x', section_cfg.outer_wall.min.x, (section_cfg.inner_wall.y + 1), (section_cfg.inner_wall.y + 1), tile_types[start_end_types[0]])
+						make_door('x', section_cfg.outer_wall.min.x, (section_cfg.inner_wall.y - 1), (section_cfg.inner_wall.y - 1), tile_types[start_end_types[1]])
 						world_boundary_normal = Vector2.RIGHT
 						world_boundary_pos = Vector2(0.0, 1.0)
 			# Check to see if each chamber needs to be broken into more chambers
 				# Quadrants 1-4 respectively
-			generate_maze_section(min_wall, wall_point, (iteration + 1), 1)
-			generate_maze_section(Vector2i(wall_point.x, min_wall.y), Vector2i(max_wall.x, wall_point.y), (iteration + 1), 2)
-			generate_maze_section(Vector2i(min_wall.x, wall_point.y), Vector2i(wall_point.x, max_wall.y), (iteration + 1), 3)
-			generate_maze_section(wall_point, max_wall, (iteration + 1), 4)
+			generate_maze_section(section_cfg.outer_wall.min, section_cfg.inner_wall, (iteration + 1), 1)
+			generate_maze_section(Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.min.y), Vector2i(section_cfg.outer_wall.max.x, section_cfg.inner_wall.y), (iteration + 1), 2)
+			generate_maze_section(Vector2i(section_cfg.outer_wall.min.x, section_cfg.inner_wall.y), Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.max.y), (iteration + 1), 3)
+			generate_maze_section(section_cfg.inner_wall, section_cfg.outer_wall.max, (iteration + 1), 4)
+	print(section_cfg)
 
 func make_door(axis: String, wall_point: int, min_d: int, max_d: int, door_type: int):
 	var door_point: int = rng.randi_range(min_d, max_d)
@@ -207,7 +248,7 @@ func display_maze():
 					walls.append(Vector2i(x,y))
 				2:
 					floors.append(Vector2i(x,y))
-					start_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(0,0))
+					start_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i.ZERO)
 					# Set spawn point for player
 					start_pos = Vector2(x,y)
 				3:
@@ -226,5 +267,5 @@ func display_maze():
 	# Set up camera
 	$Slime/FollowCam.set_up_camera()
 	# Spawn Player
-	start_pos = ( start_pos * tile_size_vector ) + ( tile_size_vector * Vector2(0.5, 0.5) )
+	start_pos = ( start_pos * tile_size_vector ) + ( tile_size_vector * .5 )
 	slime.start(start_pos)
