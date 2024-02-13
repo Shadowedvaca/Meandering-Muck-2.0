@@ -21,6 +21,21 @@ var world_boundary_pos = Vector2.ZERO
 @onready var maze_size_vector = Vector2i(maze_size, maze_size)
 @export var maze_growth: int = 5
 @onready var maze_growth_vector = Vector2i(maze_growth, maze_growth)
+@export var door_placement = {
+	0: {
+		"N": ["E","W","E","W"],
+		"E": ["S","S","N","N"],
+		"S": ["E","W","E","W"],
+		"W": ["S","S","N","N"]
+	},
+	1: {
+		"N": ["W","E","N","N"],
+		"E": ["E","N","E","S"],
+		"S": ["S","S","W","E"],
+		"W": ["N","W","S","W"]
+	}
+}
+@onready var compass = ['N', 'E', 'S', 'W']
 @onready var wall_tilemap = $WallTileMap
 @onready var floor_tilemap = $FloorTileMap
 @onready var start_tilemap = $StartTileMap
@@ -60,7 +75,7 @@ func make_maze():
 	grow_maze_size()
 	set_maze_defaults()
 	set_maze_format()
-	generate_maze_section(Vector2i.ZERO, ( maze_size_vector + Vector2i(-1, -1) ), 0)
+	generate_maze_section(Vector2i.ZERO, ( maze_size_vector + Vector2i(-1, -1) ))
 	display_maze()
 	
 func grow_maze_size():
@@ -84,17 +99,18 @@ func set_maze_format():
 		maze_types.shuffle()
 		maze_type = maze_types[0]
 
-func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration: int, quadrant: int = 0):
+func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration: int = 0, quadrant: int = 0, wall_force: String = ""):
 	var skip = 0
 	var wall_point = Vector2i.ZERO
-	# used to pick where doors go
-	var compass = ['N', 'E', 'S', 'W']
-	var direction_id = 0
-	var direction = ''
+	var subsequent_run: int = 0
+	if iteration > 0:
+		subsequent_run = 1
 	# Set up the quadrant object to have all the pertinent points of data
 	var section_cfg = {
-		"iteration": iteration
+		"maze_type": maze_type
+		,"iteration": iteration
 		,"quadrant": quadrant
+		,"wall_force": wall_force
 		,"outer_wall": { # These are the outer walls (what is passed to generate)
 			"min": min_points
 			,"max": max_points
@@ -131,6 +147,20 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 		,int((section_cfg.outer_wall.max.y - section_cfg.outer_wall.min.y) * middle_ish_range)
 	)
 	section_cfg.inner_wall = Vector2i.ZERO # This is the chosen inner wall intersection
+	section_cfg.doors = {
+		0: {
+			"position": Vector2i.ZERO
+			,"direction": ""
+		},
+		1: {
+			"position": Vector2i.ZERO
+			,"direction": ""
+		},
+		2: {
+			"position": Vector2i.ZERO
+			,"direction": ""
+		}
+	}
 	# Test if there can be at least 1 row and 1 column
 	if section_cfg.open.max.x > section_cfg.open.min.x and section_cfg.open.max.y > section_cfg.open.min.y:
 		var wall_check: bool = make_inner_walls(section_cfg)
@@ -138,21 +168,41 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 		if wall_check:
 			
 			# DOOR CODE
-			
-			var passes = 1
-			while len(compass) > 1:
-				direction_id = rng.randi_range(0, len(compass) - 1)
-				direction = compass.pop_at(direction_id)
-				passes += 1
-				match direction:
-					'N':
-						make_door('x', section_cfg.inner_wall.x, section_cfg.corridor.min.y, (section_cfg.inner_wall.y - 1), 0)
-					'E':
-						make_door('y', section_cfg.inner_wall.y, (section_cfg.inner_wall.x + 1), section_cfg.corridor.max.x, 0)
-					'S':
-						make_door('x', section_cfg.inner_wall.x, (section_cfg.inner_wall.y + 1), section_cfg.corridor.max.y, 0)
-					'W':
-						make_door('y', section_cfg.inner_wall.y, section_cfg.corridor.min.x, (section_cfg.inner_wall.x - 1), 0)
+
+			var skipped_wall: String
+			var direction: String
+			if wall_force != "" and maze_type != "Random":
+				skipped_wall = wall_force
+			else:
+				compass.shuffle()
+				skipped_wall = compass[0]
+			for c in len(compass):
+				if compass[c] != skipped_wall:
+					direction = compass.pop_at(c)
+					section_cfg["doors"][c]["direction"] = compass[c]
+					# Next, need to take the same tack as with walls
+						# Middle = 1 possible location for door (min = max)
+							# the code is not in place yet to recommend a near/far along w/ the compass point
+								# Pattern is on back of sticky note called hypothesis
+								# Figure out how to express it in an object like the compass stuff
+						# Middle-ish = a set of possible locations for door based on mid point (min < max)
+							# Will need the recommendation from the prior
+						# Random = all possible locations for door (min < max)
+					# Then generate a random based on this min/max values
+					# Record the position below
+					section_cfg["doors"][c]["position"] = ???
+					# Then update the maze to 0 on that position
+						# Kill the make doors code once start/end is done
+						
+					match direction:
+						'N':
+							make_door('x', section_cfg.inner_wall.x, section_cfg.corridor.min.y, (section_cfg.inner_wall.y - 1), 0)
+						'E':
+							make_door('y', section_cfg.inner_wall.y, (section_cfg.inner_wall.x + 1), section_cfg.corridor.max.x, 0)
+						'S':
+							make_door('x', section_cfg.inner_wall.x, (section_cfg.inner_wall.y + 1), section_cfg.corridor.max.y, 0)
+						'W':
+							make_door('y', section_cfg.inner_wall.y, section_cfg.corridor.min.x, (section_cfg.inner_wall.x - 1), 0)
 			# Determine where the start and end are
 			if iteration == 0:
 				start_end_types.shuffle()
@@ -179,12 +229,25 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 						world_boundary_pos = Vector2(0.0, 1.0)
 			# Check to see if each chamber needs to be broken into more chambers
 				# Quadrants 1-4 respectively
-			generate_maze_section(section_cfg.outer_wall.min, section_cfg.inner_wall, (iteration + 1), 1)
-			generate_maze_section(Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.min.y), Vector2i(section_cfg.outer_wall.max.x, section_cfg.inner_wall.y), (iteration + 1), 2)
-			generate_maze_section(Vector2i(section_cfg.outer_wall.min.x, section_cfg.inner_wall.y), Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.max.y), (iteration + 1), 3)
-			generate_maze_section(section_cfg.inner_wall, section_cfg.outer_wall.max, (iteration + 1), 4)
+			var mip = Vector2i.ZERO
+			var map = Vector2i.ZERO
+			for q in range(1,5):
+				match q:
+					1:
+						mip = section_cfg.outer_wall.min
+						map = section_cfg.inner_wall
+					2:
+						mip = Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.min.y)
+						map = Vector2i(section_cfg.outer_wall.max.x, section_cfg.inner_wall.y)
+					3:
+						mip = Vector2i(section_cfg.outer_wall.min.x, section_cfg.inner_wall.y)
+						map = Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.max.y)
+					4:
+						mip = section_cfg.inner_wall
+						map = section_cfg.outer_wall.max
+				generate_maze_section(mip, map, (iteration + 1), q, door_placement[subsequent_run][compass[0]][(q - 1)])
 	# This dumps the config of the section for troubleshooting
-	#print(section_cfg)
+	print(section_cfg)
 
 func make_inner_walls(section_cfg):
 	match maze_type:
