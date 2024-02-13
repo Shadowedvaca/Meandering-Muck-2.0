@@ -133,47 +133,9 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 	section_cfg.inner_wall = Vector2i.ZERO # This is the chosen inner wall intersection
 	# Test if there can be at least 1 row and 1 column
 	if section_cfg.open.max.x > section_cfg.open.min.x and section_cfg.open.max.y > section_cfg.open.min.y:
-		
-		# WALL CODE
-		
-		match maze_type:
-			'Random':
-				section_cfg.inner_wall_potential.min = Vector2i(section_cfg.open.min.x
-																, section_cfg.open.min.y)
-				section_cfg.inner_wall_potential.max = Vector2i(section_cfg.open.max.x
-																, section_cfg.open.max.y)
-			'Middle':
-				section_cfg.inner_wall_potential.min = Vector2i(section_cfg.middle_point.x
-																, section_cfg.middle_point.y)
-				section_cfg.inner_wall_potential.max = section_cfg.inner_wall.min
-			'Middle-ish':
-				section_cfg.inner_wall_potential.min = Vector2i(section_cfg.middle_point.x - section_cfg.middle_ish_adjustment.x
-																, section_cfg.middle_point.y - section_cfg.middle_ish_adjustment.y)
-				section_cfg.inner_wall_potential.max = Vector2i(section_cfg.middle_point.x + section_cfg.middle_ish_adjustment.x
-																, section_cfg.middle_point.y + section_cfg.middle_ish_adjustment.y)
-		# Test to see if there is room for walls
-		#	Assumption is that every wall must have 1 coridoor next to it
-		#	+ 1 on end because range does not include the last number
-		for x in range(section_cfg.inner_wall_potential.min.x, (section_cfg.inner_wall_potential.max.x + 1)):
-			if maze[x][section_cfg.outer_wall.min.y] == 1 and maze[x][section_cfg.outer_wall.max.y] == 1:
-				section_cfg.inner_wall_potential.x.append(x)
-		for y in range(section_cfg.inner_wall_potential.min.y, (section_cfg.inner_wall_potential.max.y + 1)):
-			if maze[section_cfg.outer_wall.min.x][y] == 1 and maze[section_cfg.outer_wall.max.x][y] == 1:
-				section_cfg.inner_wall_potential.y.append(y)
-		# check for corridors that are too small for a wall due to the 1 space on either side limit and door positioning
-		if not(section_cfg.inner_wall_potential.x.is_empty()) and not(section_cfg.inner_wall_potential.y.is_empty()):
-			
-			# WALL CODE
-			
-			section_cfg.inner_wall_potential.x.shuffle()
-			section_cfg.inner_wall.x = section_cfg.inner_wall_potential.x[0]
-			section_cfg.inner_wall_potential.y.shuffle()
-			section_cfg.inner_wall.y = section_cfg.inner_wall_potential.y[0]
-			# set bits to 1 for the walls
-			for x in section_cfg.inner_wall_fill.x:
-				maze[x][section_cfg.inner_wall.y] = 1
-			for y in section_cfg.inner_wall_fill.y:
-				maze[section_cfg.inner_wall.x][y] = 1
+		var wall_check: bool = make_inner_walls(section_cfg)
+		# If no inner walls made, skip
+		if wall_check:
 			
 			# DOOR CODE
 			
@@ -221,7 +183,51 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 			generate_maze_section(Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.min.y), Vector2i(section_cfg.outer_wall.max.x, section_cfg.inner_wall.y), (iteration + 1), 2)
 			generate_maze_section(Vector2i(section_cfg.outer_wall.min.x, section_cfg.inner_wall.y), Vector2i(section_cfg.inner_wall.x, section_cfg.outer_wall.max.y), (iteration + 1), 3)
 			generate_maze_section(section_cfg.inner_wall, section_cfg.outer_wall.max, (iteration + 1), 4)
-	print(section_cfg)
+	# This dumps the config of the section for troubleshooting
+	#print(section_cfg)
+
+func make_inner_walls(section_cfg):
+	match maze_type:
+		'Random':
+			section_cfg.inner_wall_potential.min = Vector2i(section_cfg.open.min.x
+															, section_cfg.open.min.y)
+			section_cfg.inner_wall_potential.max = Vector2i(section_cfg.open.max.x
+															, section_cfg.open.max.y)
+		'Middle':
+			section_cfg.inner_wall_potential.min = Vector2i(section_cfg.middle_point.x
+															, section_cfg.middle_point.y)
+			section_cfg.inner_wall_potential.max = section_cfg.inner_wall.min
+		'Middle-ish':
+			section_cfg.inner_wall_potential.min = Vector2i(section_cfg.middle_point.x - section_cfg.middle_ish_adjustment.x
+															, section_cfg.middle_point.y - section_cfg.middle_ish_adjustment.y)
+			section_cfg.inner_wall_potential.max = Vector2i(section_cfg.middle_point.x + section_cfg.middle_ish_adjustment.x
+															, section_cfg.middle_point.y + section_cfg.middle_ish_adjustment.y)
+	# Test to see if there is room for walls
+	#	Assumption is that every wall must have 1 coridoor next to it
+	#	+ 1 on end because range does not include the last number
+	for x in range(section_cfg.inner_wall_potential.min.x, (section_cfg.inner_wall_potential.max.x + 1)):
+		if maze[x][section_cfg.outer_wall.min.y] == 1 and maze[x][section_cfg.outer_wall.max.y] == 1:
+			section_cfg.inner_wall_potential.x.append(x)
+	for y in range(section_cfg.inner_wall_potential.min.y, (section_cfg.inner_wall_potential.max.y + 1)):
+		if maze[section_cfg.outer_wall.min.x][y] == 1 and maze[section_cfg.outer_wall.max.x][y] == 1:
+			section_cfg.inner_wall_potential.y.append(y)
+	if not(section_cfg.inner_wall_potential.x.is_empty()) and not(section_cfg.inner_wall_potential.y.is_empty()):
+		# Pick random avail spots for the wall
+		section_cfg.inner_wall_potential.x.shuffle()
+		section_cfg.inner_wall.x = section_cfg.inner_wall_potential.x[0]
+		section_cfg.inner_wall_potential.y.shuffle()
+		section_cfg.inner_wall.y = section_cfg.inner_wall_potential.y[0]
+		# set bits to 1 for the walls (build the inner walls)
+		for x in section_cfg.inner_wall_fill.x:
+			maze[x][section_cfg.inner_wall.y] = 1
+		for y in section_cfg.inner_wall_fill.y:
+			maze[section_cfg.inner_wall.x][y] = 1
+		# inner walls made, continue
+		return true
+	else:
+		# no wall possible, stop
+		return false
+	
 
 func make_door(axis: String, wall_point: int, min_d: int, max_d: int, door_type: int):
 	var door_point: int = rng.randi_range(min_d, max_d)
