@@ -863,14 +863,7 @@ sources/0 = SubResource("TileSetAtlasSource_uw0dr")
 
 [node name="main" type="Node"]
 script = ExtResource("1_shig8")
-maze_types = null
-maze_type = null
-start_end_types = null
-tile_types = null
-middle_ish_range = null
-maze_size = null
-maze_growth = null
-door_placement = null
+maze_type = "Middle-ish"
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 visible = false
