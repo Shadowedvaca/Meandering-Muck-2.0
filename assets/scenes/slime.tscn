@@ -1,10 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://bmid2nr67xfgk"]
+[gd_scene load_steps=9 format=3 uid="uid://bmid2nr67xfgk"]
 
 [ext_resource type="Script" path="res://assets/scripts/slime.gd" id="1_m4hlr"]
 [ext_resource type="Texture2D" uid="uid://bbi6xjnqnl3h8" path="res://assets/art/slime_fly_0.png" id="2_cegdp"]
 [ext_resource type="Texture2D" uid="uid://cjvqqsq8lk2my" path="res://assets/art/slime_fly_1.png" id="3_ood5p"]
 [ext_resource type="Texture2D" uid="uid://dx7rl4rax40pf" path="res://assets/art/slime_walk_0.png" id="4_uq3xa"]
 [ext_resource type="Texture2D" uid="uid://c5l00qdencup0" path="res://assets/art/slime_walk_1.png" id="5_iashm"]
+[ext_resource type="Script" path="res://assets/scripts/FollowCam.gd" id="6_npun5"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_tdi0j"]
 animations = [{
@@ -45,3 +46,16 @@ animation = &"fly"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_bck42")
+
+[node name="FollowCam" type="Camera2D" parent="."]
+unique_name_in_owner = true
+process_callback = 0
+limit_left = 0
+limit_top = 0
+limit_smoothed = true
+position_smoothing_enabled = true
+script = ExtResource("6_npun5")
+camera_speed = 0.01
+default_zoom = 2.0
+min_zoom = 0.5
+max_zoom = 8.0

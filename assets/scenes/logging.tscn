@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bllvtfafxdvdb"]
+
+[ext_resource type="Script" path="res://assets/scripts/logging.gd" id="1_0lols"]
+
+[node name="Logging" type="Node"]
+script = ExtResource("1_0lols")

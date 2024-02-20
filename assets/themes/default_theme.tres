@@ -1,0 +1,25 @@
+[gd_resource type="Theme" load_steps=7 format=3 uid="uid://vlbrrce1aha4"]
+
+[ext_resource type="FontFile" uid="uid://cdkrs5axrlitm" path="res://assets/fonts/8Bit-44Pl.ttf" id="1_yyp7j"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_urvn5"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_a25ki"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_c8di7"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pbtey"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5676m"]
+
+[resource]
+default_font = ExtResource("1_yyp7j")
+default_font_size = 16
+Button/colors/font_focus_color = Color(0, 1, 0, 1)
+Button/colors/font_hover_color = Color(0, 0.203922, 0.203922, 1)
+Button/colors/font_pressed_color = Color(0, 0, 0, 1)
+Button/styles/disabled = SubResource("StyleBoxEmpty_urvn5")
+Button/styles/focus = SubResource("StyleBoxEmpty_a25ki")
+Button/styles/hover = SubResource("StyleBoxEmpty_c8di7")
+Button/styles/normal = SubResource("StyleBoxEmpty_pbtey")
+Button/styles/pressed = SubResource("StyleBoxEmpty_5676m")
