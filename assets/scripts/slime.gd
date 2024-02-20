@@ -53,7 +53,7 @@ func _process(delta):
 		@warning_ignore("unsafe_property_access")
 		$AnimatedSprite2D.flip_v = slime_velocity.y > 0
 
-func start(world_size: Vector2i, start_position: Vector2) -> void:
+func _on_maze_maze_ready(world_size: Vector2, start_position: Vector2) -> void:
 	position = start_position
 	show()
 	@warning_ignore("unsafe_method_access")

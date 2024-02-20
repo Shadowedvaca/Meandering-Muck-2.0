@@ -32,10 +32,12 @@ func _process(delta):
 	new_zoom = zoom + velocity
 	zoom = clamp(new_zoom, min_zoom_override_vector, max_zoom_vector)
 
-func set_up_camera(world_size: Vector2i) -> void:
+func set_up_camera(world_size: Vector2) -> void:
 	# Anchor the limits to the edges of the maze
-	var screen_size: Vector2i = get_viewport_rect().size
+	var screen_size: Vector2 = get_viewport_rect().size
+	@warning_ignore("narrowing_conversion")
 	limit_right = world_size.x
+	@warning_ignore("narrowing_conversion")
 	limit_bottom = world_size.y
 	# Set the starting zoom based on screen and maze size
 	var screen_maze_x: float = 0.0

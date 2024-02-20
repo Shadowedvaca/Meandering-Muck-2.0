@@ -11,11 +11,10 @@ script = ExtResource("1_shig8")
 SlimeScene = ExtResource("3_66xqf")
 MazeScene = ExtResource("2_5c3j1")
 
-[node name="Maze" parent="." instance=ExtResource("2_5c3j1")]
-
-[node name="Slime" parent="." instance=ExtResource("3_66xqf")]
-
 [node name="MainMenu" parent="." instance=ExtResource("2_b17en")]
 unique_name_in_owner = true
 
 [node name="Logging" parent="." instance=ExtResource("5_u6bky")]
+unique_name_in_owner = true
+
+[connection signal="start_game" from="MainMenu" to="." method="_on_main_menu_start_game"]

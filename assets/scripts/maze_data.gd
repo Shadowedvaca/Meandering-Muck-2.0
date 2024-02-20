@@ -23,32 +23,32 @@ var middle_ish_range: float = .25
 func get_middle_ish_range() -> float:
 	return middle_ish_range
 
-func get_outer_wall(bound: String) -> Vector2i:
+func get_outer_wall(bound: String) -> Vector2:
 	if bound == 'min':
 		return outer_wall[0]
 	elif bound == 'max':
 		return outer_wall[1]
 	else:
-		return Vector2i(-1, -1)
+		return Vector2(-1, -1)
 
-func get_corridor(bound: String) -> Vector2i:
+func get_corridor(bound: String) -> Vector2:
 	if bound == 'min':
 		return corridor[0]
 	elif bound == 'max':
 		return corridor[1]
 	else:
-		return Vector2i(-1, -1)
+		return Vector2(-1, -1)
 		
-func get_open(bound: String) -> Vector2i:
+func get_open(bound: String) -> Vector2:
 	if bound == 'min':
 		return open[0]
 	elif bound == 'max':
 		return open[1]
 	else:
-		return Vector2i(-1, -1)
+		return Vector2(-1, -1)
 
-func get_inner_wall_vector(vector_type: String, bound: String = '') -> Vector2i:
-	var v: Vector2i = Vector2i(-1, -1)
+func get_inner_wall_vector(vector_type: String, bound: String = '') -> Vector2:
+	var v: Vector2 = Vector2(-1, -1)
 	match vector_type:
 		'position':
 			v = inner_wall.get_position()
@@ -77,8 +77,8 @@ func get_door_distance(door_type: String, door_number: int = -1) -> String:
 	var door: MazePiece = _get_maze_piece('door', door_type, door_number)
 	return door.get_distance()
 
-func get_door_vector(vector_type: String, door_type: String, door_number: int = -1, bound: String = '') -> Vector2i:
-	var v: Vector2i = Vector2i(-1, -1)
+func get_door_vector(vector_type: String, door_type: String, door_number: int = -1, bound: String = '') -> Vector2:
+	var v: Vector2 = Vector2(-1, -1)
 	var door: MazePiece = _get_maze_piece('door', door_type, door_number)
 	match vector_type:
 		'position':
@@ -91,48 +91,63 @@ func get_door_vector(vector_type: String, door_type: String, door_number: int = 
 			v = door.get_potential_range(bound)
 	return v
 
-func set_outer_wall(bound: String, new_vector: Vector2i = Vector2i(-1, -1), new_x: int = -1, new_y: int = -1 ) -> void:
+func set_outer_wall(bound: String, new_vector: Vector2 = Vector2(-1, -1), new_x: int = -1, new_y: int = -1, reset: bool = true) -> void:
+	_set_maze_section_type('outer_wall', bound, new_vector, new_x, new_y, reset)
 	if bound == 'min':
-		outer_wall[0] = _calculate_vector(new_vector, new_x, new_y)
 		# Also set corridor
-		set_corridor(bound, outer_wall[0] + Vector2(1, 1))
+		set_corridor(bound, outer_wall[0] + Vector2.ONE)
 	elif bound == 'max':
-		outer_wall[1] = _calculate_vector(new_vector, new_x, new_y)
 		# Also set corridor
-		set_corridor(bound, outer_wall[1] - Vector2(1, 1))
+		set_corridor(bound, outer_wall[1] - Vector2.ONE)
 	# Also set inner wall middle-ish adjustment
-	inner_wall.set_middle_ish_adjustment(clamp_vector_to('outer_wall', Vector2i(
+	inner_wall.set_middle_ish_adjustment(clamp_vector_to('outer_wall', Vector2(
 		int((get_outer_wall('max').x - get_outer_wall('min').x) * middle_ish_range)
 		,int((get_outer_wall('max').y - get_outer_wall('min').y) * middle_ish_range)
 	)))
 
-func set_corridor(bound: String, new_vector: Vector2i = Vector2i(-1, -1), new_x: int = -1, new_y: int = -1 ) -> void:
+func set_corridor(bound: String, new_vector: Vector2 = Vector2(-1, -1), new_x: int = -1, new_y: int = -1, reset: bool = true ) -> void:
+	_set_maze_section_type('corridor', bound, new_vector, new_x, new_y, reset)
 	if bound == 'min':
-		corridor[0] = _calculate_vector(new_vector, new_x, new_y)
 		# Also set open
-		set_open(bound, corridor[0] + Vector2(1, 1))
+		set_open(bound, corridor[0] + Vector2.ONE)
 	elif bound == 'max':
-		corridor[1] = _calculate_vector(new_vector, new_x, new_y)
 		# Also set open
-		set_open(bound, corridor[1] - Vector2(1, 1))
+		set_open(bound, corridor[1] - Vector2.ONE)
 	# Also set inner wall fill
 		# only draw on the corridors and open space
 			# Range is not inclusive of the last number, so go to wall
 	inner_wall.set_fill('x', range(corridor[0].x, outer_wall[1].x))
 	inner_wall.set_fill('y', range(corridor[0].y, outer_wall[1].y))
 
-func set_open(bound: String, new_vector: Vector2i = Vector2i(-1, -1), new_x: int = -1, new_y: int = -1 ) -> void:
-	if bound == 'min':
-		open[0] = _calculate_vector(new_vector, new_x, new_y)
-	elif bound == 'max':
-		open[1] = _calculate_vector(new_vector, new_x, new_y)
+func set_open(bound: String, new_vector: Vector2 = Vector2(-1, -1), new_x: int = -1, new_y: int = -1, reset: bool = true ) -> void:
+	_set_maze_section_type('open', bound, new_vector, new_x, new_y, reset)
 	# Also set inner wall middle point
-	inner_wall.set_middle_point(clamp_vector_to('open', Vector2i(
+	inner_wall.set_middle_point(clamp_vector_to('open', Vector2(
 		get_open('min').x + int((get_open('max').x - get_open('min').x) * .5)
 		,get_open('min').y + int((get_open('max').y - get_open('min').y) * .5)
 	)))
 
-func set_inner_wall_vector(vector_type: String, new_vector: Vector2i = Vector2i(-1, -1), new_x: int = -1, new_y: int = -1, bound: String = '') -> void:
+func _set_maze_section_type(section_type: String, bound: String, new_vector: Vector2 = Vector2(-1, -1), new_x: int = -1, new_y: int = -1, reset: bool = true ) -> void:
+	var maze_section: PackedVector2Array
+	match section_type:
+		'outer_wall':
+			maze_section = outer_wall
+		'corridor':
+			maze_section = corridor
+		'open':
+			maze_section = open
+	if reset or len(maze_section) == 0:
+		@warning_ignore("return_value_discarded")
+		maze_section.append(Vector2.ZERO)
+		@warning_ignore("return_value_discarded")
+		maze_section.append(Vector2.ZERO)
+	if bound == 'min':
+		maze_section[0] = _calculate_vector(new_vector, new_x, new_y)
+	elif bound == 'max':
+		maze_section[1] = _calculate_vector(new_vector, new_x, new_y)
+	
+
+func set_inner_wall_vector(vector_type: String, new_vector: Vector2 = Vector2(-1, -1), new_x: int = -1, new_y: int = -1, bound: String = '') -> void:
 	match vector_type:
 		'position':
 			inner_wall.set_position(new_vector, new_x, new_y)
@@ -164,7 +179,7 @@ func set_door_distance(door_type: String, door_number: int = -1, new_value: Stri
 	var door: MazePiece = _get_maze_piece('door', door_type, door_number)
 	door.set_distance(new_value)
 
-func set_door_vector(vector_type: String, door_type: String, door_number: int = -1, new_vector: Vector2i = Vector2i(-1, -1), new_x: int = -1, new_y: int = -1, bound: String = '') -> void:
+func set_door_vector(vector_type: String, door_type: String, door_number: int = -1, new_vector: Vector2 = Vector2(-1, -1), new_x: int = -1, new_y: int = -1, bound: String = '') -> void:
 	var door: MazePiece = _get_maze_piece('door', door_type, door_number)
 	match vector_type:
 		'position':
@@ -204,17 +219,25 @@ func set_potential_range(maze_piece: String, maze_type: String, door_type: Strin
 				'door':
 					match mp.get_direction():
 						'N':
-							mp.set_potential_range('min', Vector2i(-1, -1), inner_wall.get_position().x, get_corridor('min').y)
-							mp.set_potential_range('max', Vector2i(-1, -1), inner_wall.get_position().x, inner_wall.get_position().y - 1)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('min', Vector2(-1, -1), inner_wall.get_position().x, get_corridor('min').y)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('max', Vector2(-1, -1), inner_wall.get_position().x, inner_wall.get_position().y - 1)
 						'E':
-							mp.set_potential_range('min', Vector2i(-1, -1), inner_wall.get_position().x + 1, inner_wall.get_position().y)
-							mp.set_potential_range('max', Vector2i(-1, -1), get_corridor('max').x, inner_wall.get_position().y)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('min', Vector2(-1, -1), inner_wall.get_position().x + 1, inner_wall.get_position().y)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('max', Vector2(-1, -1), get_corridor('max').x, inner_wall.get_position().y)
 						'S':
-							mp.set_potential_range('min', Vector2i(-1, -1), inner_wall.get_position().x, inner_wall.get_position().y + 1)
-							mp.set_potential_range('max', Vector2i(-1, -1), inner_wall.get_position().x, get_corridor('max').y)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('min', Vector2(-1, -1), inner_wall.get_position().x, inner_wall.get_position().y + 1)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('max', Vector2(-1, -1), inner_wall.get_position().x, get_corridor('max').y)
 						'W':
-							mp.set_potential_range('min', Vector2i(-1, -1), get_corridor('min').x, inner_wall.get_position().y)
-							mp.set_potential_range('max', Vector2i(-1, -1), inner_wall.get_position().x - 1, inner_wall.get_position().y)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('min', Vector2(-1, -1), get_corridor('min').x, inner_wall.get_position().y)
+							@warning_ignore("narrowing_conversion")
+							mp.set_potential_range('max', Vector2(-1, -1), inner_wall.get_position().x - 1, inner_wall.get_position().y)
 				_:
 					mp.set_potential_range('min', get_open('min'))
 					mp.set_potential_range('max', get_open('max'))
@@ -237,9 +260,9 @@ func set_random_position(maze_piece: String, door_type: String = '', door_number
 	var mp: MazePiece = _get_maze_piece(maze_piece, door_type, door_number)
 	mp.set_random_position()
 
-func clamp_vector_to(maze_part: String, vector_pos: Vector2i) -> Vector2i:
-	var min_vector: Vector2i
-	var max_vector: Vector2i
+func clamp_vector_to(maze_part: String, vector_pos: Vector2) -> Vector2:
+	var min_vector: Vector2
+	var max_vector: Vector2
 	match maze_part:
 		'outer_wall':
 			min_vector = get_outer_wall('min')
@@ -251,9 +274,9 @@ func clamp_vector_to(maze_part: String, vector_pos: Vector2i) -> Vector2i:
 			min_vector = get_open('min')
 			max_vector = get_open('max')
 	@warning_ignore("unsafe_call_argument")
-	return Vector2i(
-		clamp(vector_pos, min_vector.x, max_vector.x)
-		,clamp(vector_pos, min_vector.y, max_vector.y)
+	return Vector2(
+		clamp(vector_pos.x, min_vector.x, max_vector.x)
+		,clamp(vector_pos.y, min_vector.y, max_vector.y)
 	)
 
 func export_to_dict(maze_type: String, iteration: int, quadrant: int, wall_force: String) -> Dictionary:

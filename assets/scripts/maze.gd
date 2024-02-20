@@ -1,7 +1,7 @@
 extends Node2D
 class_name Maze
 
-signal maze_ready(world_size: Vector2i, start_pos: Vector2)
+signal maze_ready(world_size: Vector2, start_pos: Vector2)
 signal log_ready(filename: String, log_string: String)
 
 # Types of selections
@@ -34,13 +34,13 @@ signal log_ready(filename: String, log_string: String)
 }
 
 @onready var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-@onready var maze_size_vector: Vector2i = Vector2i(maze_size, maze_size)
-@onready var maze_growth_vector: Vector2i = Vector2i(maze_growth, maze_growth)
+@onready var maze_size_vector: Vector2 = Vector2(maze_size, maze_size)
+@onready var maze_growth_vector: Vector2 = Vector2(maze_growth, maze_growth)
 @onready var wall_tilemap: TileMap = %WallTileMap
 @onready var map_size: Rect2i = wall_tilemap.get_used_rect()
 @onready var tile_size: int = wall_tilemap.rendering_quadrant_size
 @onready var tile_size_vector: Vector2 = Vector2(tile_size, tile_size)
-@onready var world_size: Vector2i = map_size.size * tile_size
+@onready var world_size: Vector2 = map_size.size * tile_size
 @onready var floor_tilemap: TileMap = %FloorTileMap
 @onready var start_tilemap: TileMap = %StartTileMap
 @onready var end_tilemap: TileMap = %EndTileMap
@@ -48,7 +48,7 @@ signal log_ready(filename: String, log_string: String)
 @onready var world_boundary_body: StaticBody2D = %WorldBoundaryBody
 @onready var world_boundary: CollisionShape2D = %WorldBoundary
 @onready var world_boundary_shape: WorldBoundaryShape2D = world_boundary.get_shape()
-@onready var mdc: Resource = load("res://assets/scripts/maze_piece.gd")
+@onready var mdc: Resource = load("res://assets/scripts/maze_data.gd")
 
 var maze: Array = []
 var level_num: int = 0
@@ -77,6 +77,9 @@ func new_game() -> void:
 	rng.randomize()
 	new_level()
 
+func _on_slime_exited() -> void:
+	new_level()
+
 # advancing to a new maze
 func new_level() -> void:
 	level_num += 1
@@ -86,7 +89,7 @@ func make_maze() -> void:
 	grow_maze_size()
 	set_maze_defaults()
 	set_maze_format()
-	generate_maze_section(Vector2i.ZERO, ( maze_size_vector + Vector2i(-1, -1) ))
+	generate_maze_section(Vector2.ZERO, ( maze_size_vector + Vector2(-1, -1) ))
 	display_maze()
 
 func grow_maze_size() -> void:
@@ -109,7 +112,7 @@ func set_maze_format() -> void:
 	if maze_type == '':
 		maze_type = maze_types.pick_random()
 
-func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration: int = 0, quadrant: int = 0, wall_force: String = "") -> void:
+func generate_maze_section(min_points: Vector2, max_points: Vector2, iteration: int = 0, quadrant: int = 0, wall_force: String = "") -> void:
 	var subsequent_run: int = 0
 	if iteration > 0:
 		subsequent_run = 1
@@ -136,19 +139,19 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 				make_start_end(maze_data)
 			# Check to see if each chamber needs to be broken into more chambers
 				# Quadrants 1-4 respectively
-			var mip: Vector2i = Vector2i.ZERO
-			var map: Vector2i = Vector2i.ZERO
+			var mip: Vector2 = Vector2.ZERO
+			var map: Vector2 = Vector2.ZERO
 			for q: int in range(1,5):
 				match q:
 					1:
 						mip = maze_data.get_outer_wall('min')
 						map = maze_data.get_inner_wall_vector('position')
 					2:
-						mip = Vector2i(maze_data.get_inner_wall_vector('position').x, maze_data.get_outer_wall('min').y)
-						map = Vector2i(maze_data.get_outer_wall('max').x, maze_data.get_inner_wall_vector('position').y)
+						mip = Vector2(maze_data.get_inner_wall_vector('position').x, maze_data.get_outer_wall('min').y)
+						map = Vector2(maze_data.get_outer_wall('max').x, maze_data.get_inner_wall_vector('position').y)
 					3:
-						mip = Vector2i(maze_data.get_outer_wall('min').x, maze_data.get_inner_wall_vector('position').y)
-						map = Vector2i(maze_data.get_inner_wall_vector('position').x, maze_data.get_outer_wall('max').y)
+						mip = Vector2(maze_data.get_outer_wall('min').x, maze_data.get_inner_wall_vector('position').y)
+						map = Vector2(maze_data.get_inner_wall_vector('position').x, maze_data.get_outer_wall('max').y)
 					4:
 						mip = maze_data.get_inner_wall_vector('position')
 						map = maze_data.get_outer_wall('max')
@@ -205,16 +208,18 @@ func make_doors(maze_data: MazeData, iteration: int, wall_force: String = '') ->
 				#Middle Point
 				if ( skipped_wall == 'S' and iteration % 2 == 0 ) or ( ( skipped_wall == 'E' or skipped_wall == 'W' ) and iteration % 2 == 1 ):
 					distance = 'far' # far from inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_corridor('min').y
 				else:
 					distance = 'near' # near to inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_inner_wall_vector('position').y - 1
-				maze_data.set_door_vector('middle_point', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_point', 'door', c, Vector2(
 					maze_data.get_inner_wall_vector('position').x
 					,door_pos
 				))
 				#Middle-ish Adjustment
-				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2(
 					0
 					,int((maze_data.get_inner_wall_vector('position').y - maze_data.get_outer_wall('min').y) * maze_data.get_middle_ish_range())
 				))
@@ -222,16 +227,18 @@ func make_doors(maze_data: MazeData, iteration: int, wall_force: String = '') ->
 				#Middle Point
 				if ( skipped_wall == 'W' and iteration % 2 == 0 ) or ( ( skipped_wall == 'N' or skipped_wall == 'S' ) and iteration % 2 == 1 ):
 					distance = 'far' # far from inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_corridor('max').x
 				else:
 					distance = 'near' # near to inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_inner_wall_vector('position').x + 1
-				maze_data.set_door_vector('middle_point', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_point', 'door', c, Vector2(
 					door_pos
 					,maze_data.get_inner_wall_vector('position').y
 				))
 				#Middle-ish Adjustment
-				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2(
 					int((maze_data.get_outer_wall('max').x - maze_data.get_inner_wall_vector('position').x) * maze_data.get_middle_ish_range())
 					,0
 				))
@@ -239,16 +246,18 @@ func make_doors(maze_data: MazeData, iteration: int, wall_force: String = '') ->
 				#Middle Point
 				if ( skipped_wall == 'N' and iteration % 2 == 0 ) or ( ( skipped_wall == 'E' or skipped_wall == 'W' ) and iteration % 2 == 1 ):
 					distance = 'far' # far from inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_corridor('max').y
 				else:
 					distance = 'near' # near to inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_inner_wall_vector('position').y + 1
-				maze_data.set_door_vector('middle_point', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_point', 'door', c, Vector2(
 					maze_data.get_inner_wall_vector('position').x
 					,door_pos
 				))
 				#Middle-ish Adjustment
-				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2(
 					0
 					,int((maze_data.get_outer_wall('max').y - maze_data.get_inner_wall_vector('position').y) * maze_data.get_middle_ish_range())
 				))
@@ -256,16 +265,18 @@ func make_doors(maze_data: MazeData, iteration: int, wall_force: String = '') ->
 				#Middle Point
 				if ( skipped_wall == 'E' and iteration % 2 == 0 ) or ( ( skipped_wall == 'N' or skipped_wall == 'S' ) and iteration % 2 == 1 ):
 					distance = 'far' # far from inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_corridor('min').x
 				else:
 					distance = 'near' # near to inner wall
+					@warning_ignore("narrowing_conversion")
 					door_pos = maze_data.get_inner_wall_vector('position').y - 1
-				maze_data.set_door_vector('middle_point', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_point', 'door', c, Vector2(
 					door_pos
 					,maze_data.get_inner_wall_vector('position').y
 				))
 				#Middle-ish Adjustment
-				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2i(
+				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2(
 					int((maze_data.get_inner_wall_vector('position').x - maze_data.get_outer_wall('max').x) * maze_data.get_middle_ish_range())
 					,0
 				))
@@ -290,20 +301,28 @@ func make_start_end(maze_data: MazeData) -> void:
 		var start_end: String = start_end_types[t]
 		if maze_data.get_door_direction(start_end) in range('N', 'S'):
 			if t == 0:
+				@warning_ignore("narrowing_conversion")
 				mid_x = maze_data.get_inner_wall_vector('position').x - 1
+				@warning_ignore("narrowing_conversion")
 				rnd_min_x = maze_data.get_corridor('min').x
+				@warning_ignore("narrowing_conversion")
 				rnd_max_x = maze_data.get_inner_wall_vector('position').x - 1
 			else:
+				@warning_ignore("narrowing_conversion")
 				mid_x = maze_data.get_inner_wall_vector('position').x + 1
+				@warning_ignore("narrowing_conversion")
 				rnd_min_x = maze_data.get_inner_wall_vector('position').x + 1
+				@warning_ignore("narrowing_conversion")
 				rnd_max_x = maze_data.get_corridor('min').x
 			adj_x = int((maze_data.get_outer_wall('max').x - maze_data.get_outer_wall('min').x) * maze_data.get_middle_ish_range())
 			adj_y = 0
 			if t == 0:
 				if adj_x - mid_x < maze_data.get_corridor('min').x:
+					@warning_ignore("narrowing_conversion")
 					adj_x = mid_x - maze_data.get_corridor('min').x
 			else:
 				if adj_x + mid_x < maze_data.get_corridor('max').x:
+					@warning_ignore("narrowing_conversion")
 					adj_x = mid_x + maze_data.get_corridor('max').x
 			match maze_data.get_door_direction(start_end):
 				'N':
@@ -316,25 +335,36 @@ func make_start_end(maze_data: MazeData) -> void:
 					if t == 0:
 						world_boundary_normal = Vector2.UP
 						world_boundary_pos = Vector2(1.0, 1.0)
+			@warning_ignore("narrowing_conversion")
 			mid_y = maze_data.get_outer_wall(min_max).y
+			@warning_ignore("narrowing_conversion")
 			rnd_min_y = maze_data.get_outer_wall(min_max).y
+			@warning_ignore("narrowing_conversion")
 			rnd_max_y = maze_data.get_outer_wall(min_max).y
 		elif maze_data.get_door_direction(start_end) in range('E', 'W'):
 			if t == 0:
+				@warning_ignore("narrowing_conversion")
 				mid_y = maze_data.get_inner_wall_vector('position').y - 1
+				@warning_ignore("narrowing_conversion")
 				rnd_min_y = maze_data.get_corridor('min').y
+				@warning_ignore("narrowing_conversion")
 				rnd_max_y = maze_data.get_inner_wall_vector('position').y - 1
 			else:
+				@warning_ignore("narrowing_conversion")
 				mid_y = maze_data.get_inner_wall_vector('position').y + 1
+				@warning_ignore("narrowing_conversion")
 				rnd_min_y = maze_data.get_inner_wall_vector('position').y + 1
+				@warning_ignore("narrowing_conversion")
 				rnd_max_y = maze_data.get_corridor('min').y
 			adj_x = 0
 			adj_y = int((maze_data.get_outer_wall('max').y - maze_data.get_outer_wall('min').y) * maze_data.get_middle_ish_range())
 			if t == 0:
 				if adj_y - mid_y < maze_data.get_corridor('min').y:
+					@warning_ignore("narrowing_conversion")
 					adj_y = mid_y - maze_data.get_corridor('min').y
 			else:
 				if adj_y + mid_y < maze_data.get_corridor('max').y:
+					@warning_ignore("narrowing_conversion")
 					adj_y = mid_y + maze_data.get_corridor('max').y
 			match maze_data.get_door_direction(start_end):
 				'E':
@@ -347,16 +377,19 @@ func make_start_end(maze_data: MazeData) -> void:
 					if t == 0:
 						world_boundary_normal = Vector2.RIGHT
 						world_boundary_pos = Vector2(0.0, 1.0)
+			@warning_ignore("narrowing_conversion")
 			mid_y = maze_data.get_outer_wall(min_max).y
+			@warning_ignore("narrowing_conversion")
 			rnd_min_y = maze_data.get_outer_wall(min_max).y
+			@warning_ignore("narrowing_conversion")
 			rnd_max_y = maze_data.get_outer_wall(min_max).y
 		#Middle Point
-		maze_data.set_door_vector('middle_point', start_end, -1, Vector2i(mid_x, mid_y))
+		maze_data.set_door_vector('middle_point', start_end, -1, Vector2(mid_x, mid_y))
 		#Middle-ish Adjustment
-		maze_data.set_door_vector('middle_ish_adjustment', start_end, -1, Vector2i(adj_x, adj_y))
+		maze_data.set_door_vector('middle_ish_adjustment', start_end, -1, Vector2(adj_x, adj_y))
 		if maze_type == 'Random':
-			maze_data.set_door_vector('potential_range', start_end, -1, Vector2i(rnd_min_x, rnd_min_y), -1, -1, 'min')
-			maze_data.set_door_vector('potential_range', start_end, -1, Vector2i(rnd_max_x, rnd_max_y), -1, -1, 'max')
+			maze_data.set_door_vector('potential_range', start_end, -1, Vector2(rnd_min_x, rnd_min_y), -1, -1, 'min')
+			maze_data.set_door_vector('potential_range', start_end, -1, Vector2(rnd_max_x, rnd_max_y), -1, -1, 'max')
 		else:
 			maze_data.set_potential_range(start_end, maze_type, '', -1, t)
 		maze_data.set_random_position(start_end)
@@ -375,17 +408,17 @@ func display_maze() -> void:
 		for y: int in maze_size_vector.y:
 			match maze[x][y]:
 				0:
-					floors.append(Vector2i(x,y))
+					floors.append(Vector2(x,y))
 				1:
-					walls.append(Vector2i(x,y))
+					walls.append(Vector2(x,y))
 				2:
-					floors.append(Vector2i(x,y))
-					start_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i.ZERO)
+					floors.append(Vector2(x,y))
+					start_tilemap.set_cell(0, Vector2(x,y), 0, Vector2.ZERO)
 					# Set spawn point for player
 					start_pos = Vector2(x,y)
 				3:
-					floors.append(Vector2i(x,y))
-					end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(1,0))
+					floors.append(Vector2(x,y))
+					end_tilemap.set_cell(0, Vector2(x,y), 0, Vector2(1,0))
 	# This seems to work well for mazes of less than 200 height / width
 		# May need to deal w/ this later, I am unsure what takes so long, my maze code or this line...
 	wall_tilemap.set_cells_terrain_connect(0, walls, 0, 0)

@@ -32,7 +32,7 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		clean_up_logs()
 
-func log_maze_data(filename: String, maze_data_string: String) -> void:
+func _on_maze_log_ready(filename: String, maze_data_string: String) -> void:
 	var file: FileAccess = FileAccess.open(session_log_dir + filename, FileAccess.WRITE)
 	file.store_string(maze_data_string)
 	file.close()
