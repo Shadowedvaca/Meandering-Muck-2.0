@@ -1,10 +1,9 @@
-[gd_scene load_steps=15 format=3 uid="uid://6yin0sld2uny"]
+[gd_scene load_steps=14 format=3 uid="uid://6yin0sld2uny"]
 
 [ext_resource type="Script" path="res://assets/scripts/maze.gd" id="1_5t7hc"]
 [ext_resource type="Texture2D" uid="uid://dihohjvnyf76x" path="res://assets/art/wall_tileset.png" id="2_mu3na"]
 [ext_resource type="Texture2D" uid="uid://cvs4hr3e4fmfu" path="res://assets/art/floor_tileset.png" id="3_qato4"]
 [ext_resource type="Texture2D" uid="uid://d2uq3ma351kbt" path="res://assets/art/start_end_tileset.png" id="4_jv8f1"]
-[ext_resource type="PackedScene" uid="uid://bllvtfafxdvdb" path="res://assets/scenes/logging.tscn" id="5_renkq"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_nqjgj"]
 
@@ -894,6 +893,3 @@ unique_name_in_owner = true
 z_index = 1
 tile_set = SubResource("TileSet_xra6l")
 format = 2
-
-[node name="Logging" parent="." instance=ExtResource("5_renkq")]
-unique_name_in_owner = true

@@ -1,22 +1,8 @@
-# So the issue I am dealing with now is this...
-	# Slime needs to be able to detect the end tile map
-		# Can I do this with a signal somehow instead?
-	# The follow cam needs to know the world size which is stored in the maze
-		# maybe this specific piece of data can be passed down
-			# IE, I call the slime start and pass it what it needs to know
-				# This could solve the EndTileMap issue if I can't figure out how to do it with signals
-	# The file directory needs to be shared to maze from main to save logs
-		# This one, I could just make a logging section of code
-		# It would take whatever was passed and write it
-			# It would also be responsible for cleanup
-	# Basically, these things are looking up and down the hierarchy of nodes to find data
-		# They should not know about other scene variables, if they need something from a parent
-			# (or grandparent), it needs to be passed when it's setup function is run...
-
 extends Node2D
 class_name Maze
 
-signal maze_ready()
+signal maze_ready(world_size: Vector2i, start_pos: Vector2)
+signal log_ready(filename: String, log_string: String)
 
 # Types of selections
 @export_category("Types")
@@ -46,8 +32,6 @@ signal maze_ready()
 		"W": ["N","W","S","W"]
 	}
 }
-@export_category("Logging")
-@export var keep_logs: bool = false
 
 @onready var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 @onready var maze_size_vector: Vector2i = Vector2i(maze_size, maze_size)
@@ -65,7 +49,6 @@ signal maze_ready()
 @onready var world_boundary: CollisionShape2D = %WorldBoundary
 @onready var world_boundary_shape: WorldBoundaryShape2D = world_boundary.get_shape()
 @onready var mdc: Resource = load("res://assets/scripts/maze_piece.gd")
-@onready var logging: Node = %Logging
 
 var maze: Array = []
 var level_num: int = 0
@@ -92,16 +75,12 @@ func _process(delta):
 	# Use a signal to communicate this like in the demo
 func new_game() -> void:
 	rng.randomize()
-	@warning_ignore("unsafe_method_access")
-	logging.set_up_logging(keep_logs)
 	new_level()
-
 
 # advancing to a new maze
 func new_level() -> void:
 	level_num += 1
 	make_maze()
-	
 
 func make_maze() -> void:
 	grow_maze_size()
@@ -109,11 +88,10 @@ func make_maze() -> void:
 	set_maze_format()
 	generate_maze_section(Vector2i.ZERO, ( maze_size_vector + Vector2i(-1, -1) ))
 	display_maze()
-	
+
 func grow_maze_size() -> void:
 	maze_size_vector += maze_growth_vector
 
-	
 func set_maze_defaults() -> void:
 	maze = []
 	for x: int in maze_size_vector.x:
@@ -178,8 +156,7 @@ func generate_maze_section(min_points: Vector2i, max_points: Vector2i, iteration
 				generate_maze_section(mip, map, (iteration + 1), q, door_placement[subsequent_run][skipped_direction][(q - 1)])
 	# This dumps the config of the section for troubleshooting
 	var maze_data_string: String = JSON.stringify(maze_data.export_to_dict(maze_type, iteration, quadrant, wall_force) , "\t", false)
-	@warning_ignore("unsafe_method_access")
-	logging.log_maze_data(filename, maze_data_string)
+	log_ready.emit(filename, maze_data_string)
 
 func make_inner_walls(maze_data: MazeData)-> bool:
 	maze_data.set_potential_range('inner_wall', maze_type)
@@ -388,7 +365,7 @@ func make_start_end(maze_data: MazeData) -> void:
 func display_maze() -> void:
 	var walls: Array = []
 	var floors: Array = []
-	#var start_pos: Vector2 = Vector2.ZERO
+	var start_pos: Vector2 = Vector2.ZERO
 	# Clear Tilemaps
 	wall_tilemap.clear()
 	floor_tilemap.clear()
@@ -405,7 +382,7 @@ func display_maze() -> void:
 					floors.append(Vector2i(x,y))
 					start_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i.ZERO)
 					# Set spawn point for player
-					#start_pos = Vector2(x,y)
+					start_pos = Vector2(x,y)
 				3:
 					floors.append(Vector2i(x,y))
 					end_tilemap.set_cell(0, Vector2i(x,y), 0, Vector2i(1,0))
@@ -419,4 +396,4 @@ func display_maze() -> void:
 	# Set World Boundary to block open start so player can't leave the maze
 	world_boundary_shape.set_normal(world_boundary_normal)
 	world_boundary_body.set_position(world_boundary_pos * Vector2(world_size) )
-
+	maze_ready.emit(world_size, start_pos)

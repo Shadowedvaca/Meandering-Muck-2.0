@@ -7,6 +7,8 @@ signal exited
 
 @onready var camera: Camera2D = %FollowCam
 
+var end_tile_id_saved: int
+
 # Called when the node enters the scene tree for the first time.
 @warning_ignore("untyped_declaration")
 func _ready():
@@ -34,10 +36,9 @@ func _process(delta):
 		$AnimatedSprite2D.stop()
 	var distance: Vector2 = slime_velocity * delta
 	var collision_info = move_and_collide(distance)
-	#if collision_info:
-		# This may need tweaking with the recent changes
-		#if collision_info.get_collider_id() == get_parent().end_tile_id:
-		#	exit_reached()
+	if collision_info:
+		if collision_info.get_collider_id() == end_tile_id_saved:
+			exit_reached()
 	if slime_velocity.x != 0:
 		@warning_ignore("unsafe_property_access")
 		$AnimatedSprite2D.animation = "walk"
@@ -52,14 +53,16 @@ func _process(delta):
 		@warning_ignore("unsafe_property_access")
 		$AnimatedSprite2D.flip_v = slime_velocity.y > 0
 
-func start(pos: Vector2) -> void:
-	position = pos
+func start(world_size: Vector2i, start_position: Vector2) -> void:
+	position = start_position
 	show()
 	@warning_ignore("unsafe_method_access")
-	camera.set_up_camera()
+	camera.set_up_camera(world_size)
 
 
 func exit_reached() -> void:
 	hide()
 	exited.emit()
 
+func setup_slime(end_tile_id: int) -> void:
+	end_tile_id_saved = end_tile_id
