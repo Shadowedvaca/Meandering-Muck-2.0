@@ -30,7 +30,7 @@ func _on_main_menu_start_game() -> void:
 	@warning_ignore("unsafe_property_access", "unsafe_call_argument", "return_value_discarded")
 	maze.log_ready.connect(logging._on_maze_log_ready)
 	# Build the first maze
-	maze.new_level()
+	maze.new_game()
 	#Instantiate Player
 	slime = SlimeScene.instantiate()
 	maze.add_child(slime)
