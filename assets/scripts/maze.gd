@@ -33,7 +33,6 @@ signal log_ready(filename: String, log_string: String)
 	}
 }
 
-@onready var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 @onready var maze_size_vector: Vector2 = Vector2(maze_size, maze_size)
 @onready var maze_growth_vector: Vector2 = Vector2(maze_growth, maze_growth)
 @onready var wall_tilemap: TileMap = %WallTileMap
@@ -74,7 +73,6 @@ func _process(delta):
 	# Move this code to the HUD when that's done
 	# Use a signal to communicate this like in the demo
 func new_game() -> void:
-	rng.randomize()
 	new_level()
 
 func _on_slime_exited() -> void:
@@ -124,8 +122,7 @@ func generate_maze_section(min_points: Vector2, max_points: Vector2, iteration: 
 	# Set up the quadrant object to have all the pertinent points of data
 	@warning_ignore("unsafe_method_access")
 	var maze_data: MazeData = mdc.new()
-	maze_data.set_outer_wall('min', min_points) # also sets corridor and open
-	maze_data.set_outer_wall('max', max_points) # also sets inner wall fill, middle_point, middle-ish point
+	maze_data.set_up_maze_calcs(min_points, max_points)
 	# Test if there can be at least 1 row and 1 column
 	if maze_data.get_open('max').x > maze_data.get_open('min').x and maze_data.get_open('max').y > maze_data.get_open('min').y:
 		var wall_check: bool = make_inner_walls(maze_data)
@@ -166,14 +163,13 @@ func make_inner_walls(maze_data: MazeData)-> bool:
 	# Test to see if there is room for walls
 	#	Assumption is that every wall must have 1 coridoor next to it
 	#	+ 1 on end because range does not include the last number
-	for x: int in range(maze_data.get_inner_wall_vector('potential_range', 'min').x, maze_data.get_inner_wall_vector('potential_range', 'min').x + 1 ):
+	for x: int in range(maze_data.get_inner_wall_vector('potential_range', 'min').x, maze_data.get_inner_wall_vector('potential_range', 'max').x + 1 ):
 		if maze[x][maze_data.get_outer_wall('min').y] == 1 and maze[x][maze_data.get_outer_wall('max').y] == 1:
 			maze_data.append_inner_wall_possible_positions('x', x)
-	for y: int in range(maze_data.get_inner_wall_vector('potential_range', 'min').y, maze_data.get_inner_wall_vector('potential_range', 'min').y + 1 ):
+	for y: int in range(maze_data.get_inner_wall_vector('potential_range', 'min').y, maze_data.get_inner_wall_vector('potential_range', 'max').y + 1 ):
 		if maze[maze_data.get_outer_wall('min').x][y] == 1 and maze[maze_data.get_outer_wall('max').x][y] == 1:
 			maze_data.append_inner_wall_possible_positions('y', y)
-	if not(maze_data.get_inner_wall_range('potential_range', 'x').is_empty()) and not(maze_data.get_inner_wall_range('potential_range', 'y').is_empty()):
-		# Pick random avail spots for the wall
+	if not(maze_data.get_inner_wall_range('possible_positions', 'x').is_empty()) and not(maze_data.get_inner_wall_range('possible_positions', 'y').is_empty()):		# Pick random avail spots for the wall
 		maze_data.set_random_position('inner_wall')
 		# set bits to 1 for the walls (build the inner walls)
 		for x: int in maze_data.get_inner_wall_range('fill', 'x'):
@@ -299,7 +295,7 @@ func make_start_end(maze_data: MazeData) -> void:
 		var rnd_max_y: int
 		var min_max: String
 		var start_end: String = start_end_types[t]
-		if maze_data.get_door_direction(start_end) in range('N', 'S'):
+		if maze_data.get_door_direction(start_end) in ['N', 'S']:
 			if t == 0:
 				@warning_ignore("narrowing_conversion")
 				mid_x = maze_data.get_inner_wall_vector('position').x - 1
@@ -341,7 +337,7 @@ func make_start_end(maze_data: MazeData) -> void:
 			rnd_min_y = maze_data.get_outer_wall(min_max).y
 			@warning_ignore("narrowing_conversion")
 			rnd_max_y = maze_data.get_outer_wall(min_max).y
-		elif maze_data.get_door_direction(start_end) in range('E', 'W'):
+		elif maze_data.get_door_direction(start_end) in ['E', 'W']:
 			if t == 0:
 				@warning_ignore("narrowing_conversion")
 				mid_y = maze_data.get_inner_wall_vector('position').y - 1
