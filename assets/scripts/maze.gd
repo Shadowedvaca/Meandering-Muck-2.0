@@ -6,6 +6,7 @@ signal log_ready(filename: String, log_string: String)
 
 # Types of selections
 @export_category("Types")
+# The UI exposes these as Random, Semi-Random, and Static
 @export var maze_types: Array = ['Random', 'Middle-ish', 'Middle']
 @export var maze_type: String = 'Random'
 @export var start_end_types: Array = ['start', 'end']
@@ -55,24 +56,9 @@ var world_boundary_normal: Vector2 = Vector2.ZERO
 var world_boundary_pos: Vector2 = Vector2.ZERO
 var loops_done: int = 0
 
-# Called when the node enters the scene tree for the first time.
-@warning_ignore("untyped_declaration")
-func _ready():
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-@warning_ignore("untyped_declaration", "unused_parameter")
-func _process(delta):
-	pass
-
-#func _ready():
-#	new_game()
-
 # Starting a new game
-	# Move this code to the HUD when that's done
-	# Use a signal to communicate this like in the demo
-func new_game() -> void:
+func new_game(maze_type_id: int = 0) -> void:
+	maze_type = maze_types[maze_type_id]
 	new_level()
 
 func _on_slime_exited() -> void:
@@ -86,7 +72,6 @@ func new_level() -> void:
 func make_maze() -> void:
 	grow_maze_size()
 	set_maze_defaults()
-	set_maze_format()
 	generate_maze_section(Vector2.ZERO, ( maze_size_vector + Vector2(-1, -1) ))
 	display_maze()
 
@@ -104,11 +89,6 @@ func set_maze_defaults() -> void:
 			else:
 				@warning_ignore("unsafe_method_access")
 				maze[x].append(0);
-
-func set_maze_format() -> void:
-	# If a type of wall is not selected, pick one of the three
-	if maze_type == '':
-		maze_type = maze_types.pick_random()
 
 func generate_maze_section(min_points: Vector2, max_points: Vector2, iteration: int = 0, quadrant: int = 0, wall_force: String = "") -> void:
 	var subsequent_run: int = 0

@@ -16,6 +16,7 @@ var slime: Slime
 var maze: Maze
 var world_size: Vector2
 var end_tile_id: int
+var maze_type_id: int
 
 func _on_main_menu_start_game() -> void:
 	# Setup Logging
@@ -39,4 +40,7 @@ func _on_main_menu_start_game() -> void:
 	@warning_ignore("unsafe_property_access", "unsafe_call_argument", "return_value_discarded")
 	maze.maze_ready.connect(slime._on_maze_maze_ready)
 	# Build the first maze
-	maze.new_game()
+	maze.new_game(maze_type_id)
+
+func _on_main_menu_maze_type_changed(selection_made):
+	maze_type_id = selection_made

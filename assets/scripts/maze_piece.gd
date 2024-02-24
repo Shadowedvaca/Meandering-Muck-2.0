@@ -116,5 +116,7 @@ func set_random_position_by_possible_positions() -> void:
 	position.y = _y.pick_random()
 
 func set_random_position_by_potential_range() -> void:
+	@warning_ignore("narrowing_conversion")
 	position.x = rng.randi_range(potential_range.get_min().x, potential_range.get_max().x)
+	@warning_ignore("narrowing_conversion")
 	position.y = rng.randi_range(potential_range.get_min().y, potential_range.get_max().y)
