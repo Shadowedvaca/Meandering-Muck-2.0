@@ -1,7 +1,6 @@
 class_name MazePiece
 extends MazeDataCalculations
 
-var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var mmmc: Resource = load("res://assets/scripts/maze_min_max.gd")
 var evc: Resource = load("res://assets/scripts/exploded_vector.gd")
 var position: Vector2 = Vector2(-1, -1)
@@ -15,9 +14,6 @@ var middle_point: Vector2 = Vector2(-1, -1)
 var middle_ish_adjustment: Vector2 = Vector2(-1, -1)
 var direction: String = "" # Only for doors
 var distance: String = "" # Only for doors
-
-func _ready() -> void:
-	rng.randomize()
 
 func get_position() -> Vector2:
 	return position
@@ -115,7 +111,7 @@ func set_random_position_by_possible_positions() -> void:
 	position.x = _x.pick_random()
 	position.y = _y.pick_random()
 
-func set_random_position_by_potential_range() -> void:
+func set_random_position_by_potential_range(rng: RandomNumberGenerator) -> void:
 	@warning_ignore("narrowing_conversion")
 	position.x = rng.randi_range(potential_range.get_min().x, potential_range.get_max().x)
 	@warning_ignore("narrowing_conversion")

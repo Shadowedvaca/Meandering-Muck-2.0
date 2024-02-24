@@ -7,7 +7,6 @@ signal maze_type_changed(selection_made: int)
 @onready var buttons_v_box: VBoxContainer = %ButtonsVBox
 @onready var options_menu: VBoxContainer = %OptionsMenuBox
 @onready var maze_type_button: OptionButton = %MazeTypeButton
-# Called when the node enters the scene tree for the first time.
 
 @warning_ignore("untyped_declaration")
 func _ready():
@@ -44,5 +43,5 @@ func focus_button() -> void:
 func _on_quit_game_button_pressed() -> void:
 	get_tree().quit()
 
-func _on_maze_type_button_item_selected(index):
-	maze_type_changed.emit(maze_type_button.get_selected_id())
+func _on_maze_type_button_item_selected(index: int) -> void:
+	maze_type_changed.emit(index)
