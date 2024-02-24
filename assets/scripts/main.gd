@@ -19,10 +19,6 @@ var end_tile_id: int
 var maze_type_id: int
 
 func _on_main_menu_start_game() -> void:
-	# This doesn't work yet, need to play with this...
-	DisplayServer.window_set_size(Vector2(640, 360))
-	main_menu.set_size(Vector2(640, 360))
-	# Actually, maybe this does work, need to experiment in options menu
 	rng.randomize()
 	# Setup Logging
 	@warning_ignore("unsafe_method_access")
