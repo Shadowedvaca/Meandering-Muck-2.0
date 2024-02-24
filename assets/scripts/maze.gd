@@ -309,15 +309,15 @@ func make_start_end(maze_data: MazeData) -> void:
 				@warning_ignore("narrowing_conversion")
 				rnd_min_x = maze_data.get_inner_wall_vector('position').x + 1
 				@warning_ignore("narrowing_conversion")
-				rnd_max_x = maze_data.get_corridor('min').x
+				rnd_max_x = maze_data.get_corridor('max').x
 			adj_x = int((maze_data.get_outer_wall('max').x - maze_data.get_outer_wall('min').x) * maze_data.get_middle_ish_range())
 			adj_y = 0
 			if t == 0:
-				if adj_x - mid_x < maze_data.get_corridor('min').x:
+				if mid_x - adj_x < maze_data.get_corridor('min').x:
 					@warning_ignore("narrowing_conversion")
 					adj_x = mid_x - maze_data.get_corridor('min').x
 			else:
-				if adj_x + mid_x < maze_data.get_corridor('max').x:
+				if mid_x + adj_x > maze_data.get_corridor('max').x:
 					@warning_ignore("narrowing_conversion")
 					adj_x = mid_x + maze_data.get_corridor('max').x
 			match maze_data.get_door_direction(start_end):
@@ -351,15 +351,15 @@ func make_start_end(maze_data: MazeData) -> void:
 				@warning_ignore("narrowing_conversion")
 				rnd_min_y = maze_data.get_inner_wall_vector('position').y + 1
 				@warning_ignore("narrowing_conversion")
-				rnd_max_y = maze_data.get_corridor('min').y
+				rnd_max_y = maze_data.get_corridor('max').y
 			adj_x = 0
 			adj_y = int((maze_data.get_outer_wall('max').y - maze_data.get_outer_wall('min').y) * maze_data.get_middle_ish_range())
 			if t == 0:
-				if adj_y - mid_y < maze_data.get_corridor('min').y:
+				if mid_y - adj_y < maze_data.get_corridor('min').y:
 					@warning_ignore("narrowing_conversion")
 					adj_y = mid_y - maze_data.get_corridor('min').y
 			else:
-				if adj_y + mid_y < maze_data.get_corridor('max').y:
+				if mid_y + adj_y > maze_data.get_corridor('max').y:
 					@warning_ignore("narrowing_conversion")
 					adj_y = mid_y + maze_data.get_corridor('max').y
 			match maze_data.get_door_direction(start_end):
@@ -374,11 +374,11 @@ func make_start_end(maze_data: MazeData) -> void:
 						world_boundary_normal = Vector2.RIGHT
 						world_boundary_pos = Vector2(0.0, 1.0)
 			@warning_ignore("narrowing_conversion")
-			mid_y = maze_data.get_outer_wall(min_max).y
+			mid_x = maze_data.get_outer_wall(min_max).x
 			@warning_ignore("narrowing_conversion")
-			rnd_min_y = maze_data.get_outer_wall(min_max).y
+			rnd_min_x = maze_data.get_outer_wall(min_max).x
 			@warning_ignore("narrowing_conversion")
-			rnd_max_y = maze_data.get_outer_wall(min_max).y
+			rnd_max_x = maze_data.get_outer_wall(min_max).x
 		#Middle Point
 		maze_data.set_door_vector('middle_point', start_end, -1, Vector2(mid_x, mid_y))
 		#Middle-ish Adjustment

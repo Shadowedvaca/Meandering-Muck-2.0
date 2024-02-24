@@ -337,8 +337,8 @@ func export_to_dict(maze_type: String, iteration: int, quadrant: int, wall_force
 		,'1': {
 			'position': door_1.get_position()
 			,'potential_range': {
-				'min': end.get_potential_range('min')
-				,'max': end.get_potential_range('max')
+				'min': door_1.get_potential_range('min')
+				,'max': door_1.get_potential_range('max')
 			}
 			,'middle_point': door_1.get_middle_point()
 			,'middle_ish_adjustment': door_1.get_middle_ish_adjustment()
@@ -348,8 +348,8 @@ func export_to_dict(maze_type: String, iteration: int, quadrant: int, wall_force
 		,'2': {
 			'position': door_2.get_position()
 			,'potential_range': {
-				'min': end.get_potential_range('min')
-				,'max': end.get_potential_range('max')
+				'min': door_2.get_potential_range('min')
+				,'max': door_2.get_potential_range('max')
 			}
 			,'middle_point': door_2.get_middle_point()
 			,'middle_ish_adjustment': door_2.get_middle_ish_adjustment()
@@ -362,13 +362,12 @@ func export_to_dict(maze_type: String, iteration: int, quadrant: int, wall_force
 			'start': {
 				'position': start.get_position()
 				,'potential_range': {
-					'min': end.get_potential_range('min')
-					,'max': end.get_potential_range('max')
+					'min': start.get_potential_range('min')
+					,'max': start.get_potential_range('max')
 				}
 				,'middle_point': start.get_middle_point()
 				,'middle_ish_adjustment': start.get_middle_ish_adjustment()
 				,'direction': start.get_direction()
-				,'distance': start.get_distance()
 			}
 			,'end': {
 				'position': end.get_position()
@@ -379,7 +378,6 @@ func export_to_dict(maze_type: String, iteration: int, quadrant: int, wall_force
 				,'middle_point': end.get_middle_point()
 				,'middle_ish_adjustment': end.get_middle_ish_adjustment()
 				,'direction': end.get_direction()
-				,'distance': end.get_distance()
 			}
 		}
 	return return_text

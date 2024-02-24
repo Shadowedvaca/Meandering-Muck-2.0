@@ -79,9 +79,9 @@ func append_fill(axis: String, added_value: int) -> void:
 
 func set_potential_range(bound: String, new_vector: Vector2 = Vector2(-1, -1), new_x: int = -1, new_y: int = -1 ) -> void:
 	if bound == 'min':
-		potential_range.set_min(_calculate_vector(new_vector, new_x, new_y))
+		potential_range.set_min(new_vector, new_x, new_y)
 	elif bound == 'max':
-		potential_range.set_max(_calculate_vector(new_vector, new_x, new_y))
+		potential_range.set_max(new_vector, new_x, new_y)
 
 func set_possible_positions(axis: String, value_set: PackedInt32Array) -> void:
 	match axis:
@@ -116,5 +116,5 @@ func set_random_position_by_possible_positions() -> void:
 	position.y = _y.pick_random()
 
 func set_random_position_by_potential_range() -> void:
-	position.x = rng.randi_range(potential_range.get_min().x, potential_range.get_min().x)
-	position.y = rng.randi_range(potential_range.get_min().y, potential_range.get_min().y)
+	position.x = rng.randi_range(potential_range.get_min().x, potential_range.get_max().x)
+	position.y = rng.randi_range(potential_range.get_min().y, potential_range.get_max().y)
