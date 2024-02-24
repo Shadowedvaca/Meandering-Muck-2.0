@@ -12,10 +12,12 @@ SlimeScene = ExtResource("3_66xqf")
 MazeScene = ExtResource("2_5c3j1")
 keep_logs = true
 
-[node name="Logging" parent="." instance=ExtResource("5_u6bky")]
-unique_name_in_owner = true
-
 [node name="MainMenu" parent="." instance=ExtResource("2_b17en")]
+unique_name_in_owner = true
+offset_right = 1920.0
+offset_bottom = 1080.0
+
+[node name="Logging" parent="." instance=ExtResource("5_u6bky")]
 unique_name_in_owner = true
 
 [connection signal="maze_type_changed" from="MainMenu" to="." method="_on_main_menu_maze_type_changed"]
