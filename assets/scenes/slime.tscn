@@ -36,6 +36,7 @@ animations = [{
 size = Vector2(16, 12)
 
 [node name="Slime" type="CharacterBody2D"]
+scale = Vector2(0.65, 0.65)
 script = ExtResource("1_m4hlr")
 metadata/_edit_group_ = true
 

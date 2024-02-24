@@ -411,7 +411,7 @@ func display_maze() -> void:
 					floors.append(Vector2(x,y))
 					start_tilemap.set_cell(0, Vector2(x,y), 0, Vector2.ZERO)
 					# Set spawn point for player
-					start_pos = Vector2(x,y)
+					start_pos = ( Vector2(x,y) * tile_size_vector ) + ( tile_size_vector * .5 )
 				3:
 					floors.append(Vector2(x,y))
 					end_tilemap.set_cell(0, Vector2(x,y), 0, Vector2(1,0))

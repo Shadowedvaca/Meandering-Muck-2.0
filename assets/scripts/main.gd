@@ -29,8 +29,6 @@ func _on_main_menu_start_game() -> void:
 	end_tile_id = maze.end_tile_id
 	@warning_ignore("unsafe_property_access", "unsafe_call_argument", "return_value_discarded")
 	maze.log_ready.connect(logging._on_maze_log_ready)
-	# Build the first maze
-	maze.new_game()
 	#Instantiate Player
 	slime = SlimeScene.instantiate()
 	maze.add_child(slime)
@@ -40,3 +38,5 @@ func _on_main_menu_start_game() -> void:
 	slime.exited.connect(maze._on_slime_exited)
 	@warning_ignore("unsafe_property_access", "unsafe_call_argument", "return_value_discarded")
 	maze.maze_ready.connect(slime._on_maze_maze_ready)
+	# Build the first maze
+	maze.new_game()
