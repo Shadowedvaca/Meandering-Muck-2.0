@@ -33,7 +33,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bck42"]
-size = Vector2(16, 12)
+size = Vector2(12.3077, 9.23077)
 
 [node name="Slime" type="CharacterBody2D"]
 scale = Vector2(0.65, 0.65)
@@ -47,6 +47,7 @@ sprite_frames = SubResource("SpriteFrames_tdi0j")
 animation = &"fly"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-9.16995e-08, -4.58497e-08)
 shape = SubResource("RectangleShape2D_bck42")
 
 [node name="FollowCam" type="Camera2D" parent="."]
