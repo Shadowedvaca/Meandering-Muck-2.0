@@ -266,7 +266,7 @@ func make_doors(maze_data: MazeData, iteration: int, wall_force: String = '') ->
 				else:
 					distance = 'near' # near to inner wall
 					@warning_ignore("narrowing_conversion")
-					door_pos = maze_data.get_inner_wall_vector('position').y - 1
+					door_pos = maze_data.get_inner_wall_vector('position').x - 1
 				maze_data.set_door_vector('middle_point', 'door', c, Vector2(
 					door_pos
 					,maze_data.get_inner_wall_vector('position').y
