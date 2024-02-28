@@ -251,21 +251,21 @@ func set_potential_range(maze_piece: String, maze_type: String, door_type: Strin
 				mp.set_potential_range('min', clamp_vector_to('open', mp.get_middle_point() - mp.get_middle_ish_adjustment()))
 				mp.set_potential_range('max', clamp_vector_to('open', mp.get_middle_point() + mp.get_middle_ish_adjustment()))
 			else:
-				if first_last == 1 or ( mp.get_distance() == 'far' and ( mp.get_direction() in range('N', 'W') ) ) or ( mp.get_distance() == 'near' and ( mp.get_direction() in range('S', 'E') ) ):
+				if first_last == 1 or ( mp.get_distance() == 'far' and ( mp.get_direction() in ['N', 'W'] ) ) or ( mp.get_distance() == 'near' and ( mp.get_direction() in ['S', 'E'] ) ):
 					mp.set_potential_range('min', mp.get_middle_point())
 					mp.set_potential_range('max', clamp_vector_to('corridor', mp.get_middle_point() + mp.get_middle_ish_adjustment()))
 				else:
 					mp.set_potential_range('min', clamp_vector_to('corridor', mp.get_middle_point() - mp.get_middle_ish_adjustment()))
 					mp.set_potential_range('max', mp.get_middle_point())
 
-func set_random_position(maze_piece: String, door_type: String = '', door_number: int = -1) -> void:
+func set_random_position(maze_piece: String, rng: RandomNumberGenerator, door_type: String = '', door_number: int = -1) -> void:
 	var mp: MazePiece = _get_maze_piece(maze_piece, door_type, door_number)
 	# inner wall has potential places in a range where a wall can not be placed
 	if maze_piece == 'inner_wall':
 		mp.set_random_position_by_possible_positions()
 	# doors / start / end are placed along a range
 	else:
-		mp.set_random_position_by_potential_range()
+		mp.set_random_position_by_potential_range(rng)
 
 func clamp_vector_to(maze_part: String, vector_pos: Vector2) -> Vector2:
 	var min_vector: Vector2
