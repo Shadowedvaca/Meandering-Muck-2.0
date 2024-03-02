@@ -256,7 +256,7 @@ func make_doors(maze_data: MazeData, iteration: int, wall_force: String = '') ->
 				))
 				#Middle-ish Adjustment
 				maze_data.set_door_vector('middle_ish_adjustment', 'door', c, Vector2(
-					int((maze_data.get_inner_wall_vector('position').x - maze_data.get_outer_wall('max').x) * maze_data.get_middle_ish_range())
+					int((maze_data.get_inner_wall_vector('position').x - maze_data.get_outer_wall('min').x) * maze_data.get_middle_ish_range())
 					,0
 				))
 		maze_data.set_door_distance('door', c, distance)
